@@ -7,6 +7,13 @@ edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
+path = "src/lib.rs"
+
 
 [dependencies]
 ndarray = "0.15.6"
+rand = "0.8.5"
+
+[[bin]]
+name = "pmc_model"
+path = "src/pmc_model.rs"

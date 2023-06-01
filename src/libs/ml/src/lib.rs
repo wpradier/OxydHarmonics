@@ -1,3 +1,6 @@
+mod pmc_model;
+use pmc_model::{create_pmc, PmcModel};
+use std::slice;
 struct LinearModel {
 
 }
@@ -43,4 +46,29 @@ extern "C" fn load_linear_model(filename: *const u8) -> *mut LinearModel {
     let model = Box::new(LinearModel {});
 
     Box::leak(model)
+}
+
+
+#[no_mangle]
+extern "C" fn create_mlp_model(npl: *mut i32, npl_len: usize) -> *mut PmcModel {
+    unsafe {
+        let ptr: *mut i32 = npl;
+        let len: usize = npl_len;
+        let slice: &[i32] = slice::from_raw_parts(ptr, len);
+        let vec: Vec<i32> = slice.to_vec();
+        let model: PmcModel;
+        unsafe {
+            model = create_pmc(vec);
+        }
+        let val_d = model.d;
+        let val_l = model.L;
+        let val_w = model.W;
+        let val_x = model.X;
+        let val_deltas = model.deltas;
+
+        // Créer la boîte contenant le modèle
+        let output_model = Box::new(PmcModel { d: val_d, L: val_l, W: val_w, X: val_x, deltas: val_deltas });
+
+        Box::into_raw(output_model)
+    }
 }
