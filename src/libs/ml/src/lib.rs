@@ -1,6 +1,7 @@
 mod pmc_model;
-use pmc_model::{create_pmc, PmcModel};
+use pmc_model::{create_pmc,train_pmc , PmcModel};
 use std::slice;
+use tensorboard_rs;
 struct LinearModel {
 
 }
@@ -70,5 +71,27 @@ extern "C" fn create_mlp_model(npl: *mut i32, npl_len: usize) -> *mut PmcModel {
         let output_model = Box::new(PmcModel { d: val_d, L: val_l, W: val_w, X: val_x, deltas: val_deltas });
 
         Box::into_raw(output_model)
+    }
+}
+
+#[no_mangle]
+extern "C" fn train_pmc_model(model: *mut PmcModel, X_train: *const f64, lines: i32,
+                                 columns: i32, y_train: *const f64, y_train_columns: i32,
+                                    alpha: f64, epochs: i32) -> *const f64 {
+                           unsafe{
+                            let model_ptr = model;
+                            let X_train_ptr = X_train;
+
+                           }             
+    const V: f64 = 1.0;
+
+
+    return &V;
+}
+
+#[no_mangle]
+extern "C" fn delete_pmc_model(model: *mut PmcModel) {
+    unsafe {
+        Box::from_raw(model);
     }
 }

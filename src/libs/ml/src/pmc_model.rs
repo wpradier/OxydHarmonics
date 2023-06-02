@@ -90,11 +90,11 @@ pub fn create_pmc(npl: Vec<i32>)  -> PmcModel{
     PmcModel { d: d, L: L, W: W, X: X, deltas: deltas }
 }
 
-fn tanh(x: f64) -> f64 {
+pub fn tanh(x: f64) -> f64 {
     (E.powf(2.0 * x) - 1.0) / (E.powf(2.0 * x) + 1.0)
 }
 
-fn propagate_pmc(mut model :PmcModel , inputs: [f64; 2], is_classification: bool) -> PmcModel {
+pub fn propagate_pmc(mut model :PmcModel , inputs: [f64; 2], is_classification: bool) -> PmcModel {
     for j in 0..model.d[0] {
         model.X[0][j as usize + 1] = inputs[j as usize] as f64;
     }
@@ -113,12 +113,12 @@ fn propagate_pmc(mut model :PmcModel , inputs: [f64; 2], is_classification: bool
     model
 }
 
-fn predict_pmc(mut model : PmcModel, inputs: [f64; 2], is_classification: bool) -> PmcModel {
+pub fn predict_pmc(mut model : PmcModel, inputs: [f64; 2], is_classification: bool) -> PmcModel {
     model = propagate_pmc(model,inputs, is_classification);
     model
 }
 
-fn train_pmc(
+pub fn train_pmc(
     mut model : PmcModel,
     features: Vec<[f64; 2]>,
     label: Vec<[f64; 1]>,
