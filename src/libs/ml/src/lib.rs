@@ -81,6 +81,7 @@ extern "C" fn train_pmc_model(model: *mut PmcModel, X_train: *const f64, lines: 
                            unsafe{
                             let model_ptr = model;
                             let X_train_ptr = X_train;
+                            
 
                            }             
     const V: f64 = 1.0;
