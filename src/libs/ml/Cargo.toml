@@ -14,7 +14,12 @@ path = "src/lib.rs"
 ndarray = "0.15.6"
 rand = "0.8.5"
 tensorboard-rs = "0.5.9"
+ndarray-rand = "0.14.0"
 
 [[bin]]
 name = "pmc_model"
 path = "src/pmc_model.rs"
+
+[[bin]]
+name = "linear_model"
+path = "src/linear_model.rs"
