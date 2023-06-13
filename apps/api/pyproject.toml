@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["William Pradier <xantowill@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.95.1"
+uvicorn = "^0.21.1"
+core = { path="../../modules/core", develop=true }
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

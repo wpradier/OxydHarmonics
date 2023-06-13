@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "core"
+version = "0.1.0"
+description = ""
+authors = ["William Pradier <xantowill@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ml = { path="../ml", develop = true }
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
