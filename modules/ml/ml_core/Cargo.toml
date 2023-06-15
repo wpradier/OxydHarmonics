@@ -10,3 +10,10 @@ crate-type = ["cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
+ndarray = "0.15.6"
+ndarray-rand = "0.14.0"
+rand = "0.8.5"
+
+[[bin]]
+name = "kmeans"
+path = "src/kmeans.rs"
