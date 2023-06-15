@@ -10,3 +10,11 @@ crate-type = ["cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
+chrono = "0.4.26"
+rand = "0.8.5"
+tensorboard-rs = "0.5.9"
+
+
+[[bin]]
+name = "pmc_model"
+path = "src/pmc_model.rs"
