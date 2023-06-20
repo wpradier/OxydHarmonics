@@ -68,13 +68,15 @@ def predict_linear_model(model, sample_input, lines):
     lib.predict_linear_model.restype = ctypes.c_double
 
 
-def save_linear_model(model, filename):
-    lib.save_linear_model.argtypes = [
-        ctypes.POINTER(LinearRegressionModel),
-        ctypes.POINTER(ctypes.c_char)
+def save_linear_model(model: int, filename: bytes):
+    ml_lib.save_linear_model.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_char_p
     ]
 
-    lib.save_linear_model.restypes = None
+    ml_lib.save_linear_model.restypes = None
+
+    ml_lib.save_linear_model(model, filename)
 
 
 def destroy_linear_model(model):
@@ -90,3 +92,14 @@ def load_linear_model(filename):
 
 
 # Load the Rust library using ctypes
+
+if __name__ == '__main__':
+    print("STARTING IN PYTHON")
+    model = create_linear_model(4)
+    print("VALUE: {}".format(model))
+    print("CALLING SAVE MODEL")
+    save_linear_model(
+        model,
+        b'lol.txt'
+    )
+    print("END PYTHON")
