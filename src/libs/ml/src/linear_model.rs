@@ -72,7 +72,7 @@ fn sig(a: &f64) -> f64 {
 
 fn main() {
 
-    let X = get_csv2_f64(&String::from("../dataset/test_no_bias.txt")).unwrap();
+    let X = get_csv2_f64(&String::from("../dataset/test_no_bias2.txt")).unwrap();
     let (x1 , y1) = X.view().split_at(Axis(1), X.shape()[1] - 1);
 
     println!("X == {:?}", X);
@@ -81,7 +81,7 @@ fn main() {
     let mut linear_r = LinearRegressionModel{ W: array![0.1, 0.1, 0.1] };
     linear_r._fit(x1.into_owned(), y1.into_owned(), 5000, 0.1, false);
 
-    let result_w = linear_r.predict(array![0.7696284430248931,0.9606353623788391]);
+    let result_w = linear_r.predict(array![0.7,0.9]);
 
     println!("{}", result_w);
 }

@@ -1,10 +1,11 @@
-mod pmc_model;
+//mod pmc_model;
 mod linear_model;
 
-use pmc_model::{create_pmc,train_pmc , PmcModel};
+//use pmc_model::{create_pmc,train_pmc , PmcModel};
 use linear_model::{LinearRegressionModel};
 use std::slice;
-use ndarray::{Array, Array1, Array2};
+use ndarray::{Array, Array1, Array2, ArrayView};
+use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use tensorboard_rs;
 
@@ -13,9 +14,9 @@ use tensorboard_rs;
 #[no_mangle]
 extern "C" fn create_linear_model(len: i32) -> *mut LinearRegressionModel {
     unsafe {
-        let model_size: i32 = len;
-        let layer_weight = Array::random(
-            (1, model_size + 1),
+        let model_size: usize = len as usize;
+        let layer_weight = Array1::random(
+            model_size,
             Uniform::new(-1.0, 1.0)
         );
         let model = Box::new(LinearRegressionModel { W: layer_weight });
@@ -35,6 +36,20 @@ extern "C" fn train_linear_model(model: *mut LinearRegressionModel,
            model.read()
        };
 
+    let x_train_slice = unsafe {
+        slice::from_raw_parts(x_train, (lines * columns) as usize)
+    };
+
+    let y_train_slice = unsafe {
+        slice::from_raw_parts(y_train, y_train_columns as usize)
+    };
+
+    let _x_train = Array2::from_shape_vec((lines as usize, columns as usize), x_train_slice.to_vec()).unwrap();
+    let _y_train = Array2::from_shape_vec((1, y_train_columns as usize), y_train_slice.to_vec()).unwrap();
+
+    linear_model._fit(_x_train, _y_train, epochs, alpha, is_classification);
+
+    /*
     let mut _x_train : Array2<f64> =
         unsafe {
             Array2::from_vec(Vec::from_raw_parts(x_train.cast_mut(),
@@ -43,33 +58,41 @@ extern "C" fn train_linear_model(model: *mut LinearRegressionModel,
                 .reshape((lines, columns))
         };
 
-    let mut _y_train : Array2<f64> =
+    let mut _y_train : ArrayView<f64, _> =
         unsafe {
+            ArrayView::from_shape_ptr((1, y_train_columns), y_train).clone()
+            /*
             Array2::from_vec(Vec::from_raw_parts(y_train.cast_mut(),
                                                  y_train_columns as usize,
                                                  (y_train_columns + 1) as usize))
                 .reshape(1, y_train_columns)
-        };
 
-    linear_model._fit(_x_train, _y_train, epochs, alpha, is_classification);
+             */
+        };
+    //let x : Array2<f64> = _y_train.clone();
+     */
+
+
 }
 
 #[no_mangle]
 extern "C" fn predict_linear_model(model: *mut LinearModel, sample_input: *const f64, lines: i32) -> f64 {
-     let mut linear_model : LinearRegressionModel =
-       unsafe {
-           model.read()
-       };
-
-    let mut x_input : Array1<f64> =
+    let mut linear_model : LinearRegressionModel =
         unsafe {
-            Array1::from_vec(Vec::from_raw_parts(sample_input.cast_mut(),
-                                                 (lines) as usize,
-                                                 (lines) as usize))
+            model.read()
         };
 
-    return linear_model.predict(x_input);
+    let slice_sample = unsafe {
+        slice::from_raw_parts(sample_input, lines as usize)
+    };
+
+    let _sample_input = Array1::from_shape_vec((lines as usize, 1), slice_sample.to_vec()).unwrap();
+
+
+
+    return linear_model.predict(_sample_input);
 }
+/*
 
 #[no_mangle]
 extern "C" fn save_linear_model(model: *mut LinearModel, filename: *const u8) {
@@ -135,3 +158,4 @@ extern "C" fn delete_pmc_model(model: *mut PmcModel) {
         Box::from_raw(model);
     }
 }
+ */
