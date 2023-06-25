@@ -1,6 +1,15 @@
 mod pmc_model;
 use pmc_model::{create_pmc,train_pmc ,predict_pmc, PmcModel};
 use std::slice;
+use std::os::raw::c_char;
+use std::ffi::CStr;
+use std::fs::File;
+use std::io::{Read, Write};
+
+use serde_json;
+
+
+
 
 
 #[no_mangle]
@@ -86,3 +95,53 @@ extern "C" fn delete_float_array(arr: *mut f32, arr_len: i32) {
         Vec::from_raw_parts(arr, arr_len as usize, arr_len as usize)
     };
 }
+
+
+
+
+#[no_mangle]
+extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
+    unsafe {
+        let model_ref = model.as_mut().unwrap();
+        let filename_cstr = CStr::from_ptr(filename);
+        let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
+
+        // Serialize the model
+        let serialized_model = serde_json::to_string(model_ref).expect("Failed to serialize the model");
+
+        // Save the serialized model to the file
+        let mut file = File::create(filename_str).expect("Failed to create the file");
+        file.write_all(serialized_model.as_bytes()).expect("Failed to write the serialized model to the file");
+
+        println!("MLP model saved to file: {}", filename_str);
+    }
+}
+
+
+#[no_mangle]
+extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
+    unsafe {
+        let filename_cstr = CStr::from_ptr(filename);
+        let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
+
+        // Load the serialized model from the file
+        let mut file = File::open(filename_str).expect("Failed to open the file");
+        let mut serialized_model = String::new();
+        file.read_to_string(&mut serialized_model).expect("Failed to read the serialized model from the file");
+
+        // Deserialize the model
+        let deserialized_model: PmcModel = serde_json::from_str(&serialized_model).expect("Failed to deserialize the model");
+
+        // Allocate memory for the model and copy the deserialized model into it
+        let model_ptr = Box::into_raw(Box::new(deserialized_model));
+
+        println!("MLP model loaded from file: {}", filename_str);
+
+        model_ptr
+    }
+}
+
+
+
+
+

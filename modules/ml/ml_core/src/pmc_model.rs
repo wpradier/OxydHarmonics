@@ -5,7 +5,8 @@ use tensorboard_rs::summary_writer::SummaryWriter;
 use rand::distributions::uniform::Uniform;
 use chrono::{DateTime, Local};
 use std::{f64::consts::E, usize};
-
+use serde::{Serialize, Deserialize};
+use serde::ser::SerializeStruct;
 
 pub struct PmcModel {
     pub d: Vec<usize>,
@@ -13,6 +14,59 @@ pub struct PmcModel {
     pub W: Vec<Vec<Vec<f64>>>,
     pub X: Vec<Vec<f64>>,
     pub deltas: Vec<Vec<f64>>,
+}
+
+impl Serialize for PmcModel {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        // Serialize each field of the struct manually
+        let mut state = serializer.serialize_struct("PmcModel", /* number of fields */ 5)?;
+        
+        // Serialize the fields one by one
+        state.serialize_field("d", &self.d)?;
+        state.serialize_field("L", &self.L)?;
+        state.serialize_field("W", &self.W)?;
+        state.serialize_field("X", &self.X)?;
+        state.serialize_field("deltas", &self.deltas)?;
+        
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for PmcModel {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Deserialize each field of the struct manually
+        struct PmcModelVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for PmcModelVisitor {
+            type Value = PmcModel;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("struct PmcModel")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                // Deserialize each field one by one
+                let val_d = seq.next_element()?.ok_or_else(|| serde::de::Error::invalid_length(0, &self))?;
+                let val_l = seq.next_element()?.ok_or_else(|| serde::de::Error::invalid_length(1, &self))?;
+                let val_w = seq.next_element()?.ok_or_else(|| serde::de::Error::invalid_length(2, &self))?;
+                let val_x = seq.next_element()?.ok_or_else(|| serde::de::Error::invalid_length(3, &self))?;
+                let val_deltas = seq.next_element()?.ok_or_else(|| serde::de::Error::invalid_length(4, &self))?;
+
+                Ok(PmcModel { d: val_d, L: val_l, W: val_w, X: val_x, deltas: val_deltas })
+            }
+        }
+
+        deserializer.deserialize_struct("PmcModel", &["d", "L", "W", "X", "deltas"], PmcModelVisitor)
+    }
 }
 
 pub fn create_pmc(npl: Vec<usize>) -> PmcModel {
