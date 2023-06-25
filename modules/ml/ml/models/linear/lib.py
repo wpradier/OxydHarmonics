@@ -1,13 +1,14 @@
 import ctypes
 from typing import Optional, List
+import numpy as np
 
-# lib = ctypes.CDLL("your_rust_library.dll")  # Replace with the actual library filename
+#lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")  # Replace with the actual library filename
 # lib = ctypes.CDLL("your_rust_library.so")  # Replace with the actual library filename
 
 ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
 
 
-def create_linear_model(length: int) -> Optional[int]:
+def create_linear_model(length: int) -> int:
     ml_lib.create_linear_model.argtypes = [ctypes.c_int32]
     ml_lib.create_linear_model.restype = ctypes.c_void_p
 
@@ -24,7 +25,7 @@ def create_linear_model(length: int) -> Optional[int]:
 # TODO inflate x_train (and y_train)
 def train_linear_model(
         model: int,
-        x_train: List[int],
+        x_train: np.ndarray,
         lines: int,
         columns: int,
         y_train: List[int],
@@ -46,26 +47,27 @@ def train_linear_model(
     ]
     ml_lib.train_linear_model.restype = None
 
-    return ml_lib.train_linear_model(
+    ml_lib.train_linear_model(
         model,
-        x_train,
+        x_train.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         lines,
         columns,
-        y_train,
+        y_train.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         y_train_columns,
         alpha,
         epochs,
         is_classification
     )
 
+"""
 
 def predict_linear_model(model, sample_input, lines):
-    lib.predict_linear_model.argtypes = [
+    my_lib.predict_linear_model.argtypes = [
         ctypes.POINTER(LinearRegressionModel),
         ctypes.POINTER(ctypes.c_double),
         ctypes.c_int32
     ]
-    lib.predict_linear_model.restype = ctypes.c_double
+    my_lib.predict_linear_model.restype = ctypes.c_double
 
 
 def save_linear_model(model, filename):
@@ -90,3 +92,4 @@ def load_linear_model(filename):
 
 
 # Load the Rust library using ctypes
+"""

@@ -11,6 +11,8 @@ impl LinearModelArys {
 
     // Gradiant descent for multiple features
     pub fn _fit(&mut self, X_train: Array2<f64>, Y_train: Array2<f64>, epoch: i32, alpha: f64, is_classification: bool) {
+
+        println!("ENTERING THE FIT {:?}, {:?}, {}, {}, {}", X_train, Y_train, epoch, alpha, is_classification);
         let m  = X_train.nrows(); // number of training example
         let mf : f64 = m as f64; // number of training example as float 64
         let bias = Array::<f64, Ix2>::from_elem((X_train.shape()[0], 1), 1.);
@@ -33,7 +35,7 @@ impl LinearModelArys {
 
                     //Hypotesis function : WᵗX
                     let mut hyp = self.W.dot(&X_i);
-                    println!("«loop : {}..{} - {:?}\nxi: {:?}»",i, m ,  hyp, X_i);
+                    println!("«loop : {}..{} -hypothesis {:?}\nxi: {:?}»",i, m ,  hyp, X_i);
 
                     if is_classification {
                         hyp = sig(&hyp);
@@ -51,6 +53,7 @@ impl LinearModelArys {
             self.W = Wbis;
             println!("new weight : {}", self.W)
         }
+        println!("FINISHING FIT")
     }
 
 
