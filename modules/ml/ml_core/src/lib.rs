@@ -10,13 +10,13 @@ use crate::models::linear_arys::LinearModelArys;
 
 #[no_mangle]
 extern "C" fn create_linear_model(len: i32) -> *mut LinearModelArys{
-    unsafe {
-        let model_size: i32 = len;
+     unsafe {
+        let model_size: usize = len as usize;
         let layer_weight = Array1::random(
-            (1 as usize, model_size + 1),
+            model_size,
             Uniform::new(-1.0, 1.0)
         );
-        let model = Box::new(LinearModelArys { W: layer_weight });
+        let model = Box::new(LinearModelArys{ W: layer_weight });
 
         Box::leak(model)
     }
@@ -28,45 +28,42 @@ extern "C" fn train_linear_model(model: *mut LinearModelArys,
                                  x_train: *const f64, lines: i32, columns: i32,
                                  y_train: *const f64, y_train_columns: i32,
                                     alpha: f64, epochs: i32, is_classification: bool){
-   let mut linear_model : LinearModelArys =
+  let mut linear_model : LinearModelArys =
        unsafe {
            model.read()
        };
 
-    let mut _x_train : Array2<f64> =
-        unsafe {
-            Array2::from_vec(Vec::from_raw_parts(x_train.cast_mut(),
-                                                 (columns * lines) as usize,
-                                                 (columns * lines) as usize))
-                .reshape((lines, columns))
-        };
+    let x_train_slice = unsafe {
+        slice::from_raw_parts(x_train, (lines * columns) as usize)
+    };
 
-    let mut _y_train : Array2<f64> =
-        unsafe {
-            Array2::from_vec(Vec::from_raw_parts(y_train.cast_mut(),
-                                                 y_train_columns as usize,
-                                                 (y_train_columns + 1) as usize))
-                .reshape(1, y_train_columns)
-        };
+    let y_train_slice = unsafe {
+        slice::from_raw_parts(y_train, y_train_columns as usize)
+    };
+
+    let _x_train = Array2::from_shape_vec((lines as usize, columns as usize), x_train_slice.to_vec()).unwrap();
+    let _y_train = Array2::from_shape_vec((1, y_train_columns as usize), y_train_slice.to_vec()).unwrap();
 
     linear_model._fit(_x_train, _y_train, epochs, alpha, is_classification);
+
 }
 
 #[no_mangle]
 extern "C" fn predict_linear_model(model: *mut LinearModelArys, sample_input: *const f64, lines: i32) -> f64 {
-     let mut linear_model : LinearModelArys =
-       unsafe {
-           model.read()
-       };
-
-    let mut x_input : Array1<f64> =
+      let mut linear_model : LinearModelArys =
         unsafe {
-            Array1::from_vec(Vec::from_raw_parts(sample_input.cast_mut(),
-                                                 (lines) as usize,
-                                                 (lines) as usize))
+            model.read()
         };
 
-    return linear_model.predict(x_input);
+    let slice_sample = unsafe {
+        slice::from_raw_parts(sample_input, lines as usize)
+    };
+
+    let _sample_input = Array1::from_shape_vec((lines as usize), slice_sample.to_vec()).unwrap();
+
+
+    return linear_model.predict(_sample_input);
+
 }
 
 #[no_mangle]
