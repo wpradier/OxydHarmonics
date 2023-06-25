@@ -1,7 +1,7 @@
 mod models;
 
 use std::slice;
-use ndarray::{Array, Array1, Array2};
+use ndarray::{Array, array, Array1, Array2};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use tensorboard_rs;
@@ -12,8 +12,8 @@ use crate::models::linear_arys::LinearModelArys;
 extern "C" fn create_linear_model(len: i32) -> *mut LinearModelArys{
     unsafe {
         let model_size: i32 = len;
-        let layer_weight = Array::random(
-            (1, model_size + 1),
+        let layer_weight = Array1::random(
+            (1 as usize, model_size + 1),
             Uniform::new(-1.0, 1.0)
         );
         let model = Box::new(LinearModelArys { W: layer_weight });
@@ -81,7 +81,7 @@ extern "C" fn destroy_linear_model(model: *mut LinearModelArys) {
 
 #[no_mangle]
 extern "C" fn load_linear_model(filename: *const u8) -> *mut LinearModelArys {
-    let model = Box::new(LinearModelArys { W: () });
+    let model = Box::new(LinearModelArys { W: array![1.] });
 
     Box::leak(model)
 }
