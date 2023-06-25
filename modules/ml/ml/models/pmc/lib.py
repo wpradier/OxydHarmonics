@@ -25,6 +25,11 @@ ml_lib.delete_mlp_model.restype = None
 ml_lib.delete_float_array.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int32]
 ml_lib.delete_float_array.restype = None
 
+ml_lib.save_mlp_model.argtypes = [ctypes.c_void_p,ctypes.POINTER(ctypes.c_char)]
+ml_lib.save_mlp_model.restype = None
+
+ml_lib.load_mlp_model.argtypes = [ctypes.POINTER(ctypes.c_char)]
+ml_lib.load_mlp_model.restype = ctypes.c_void_p
 
 
 def create_mlp_model(npl: np.array , npl_size : int) -> int:
@@ -66,21 +71,20 @@ def delete_float_array(prediction, npl : List):
     ml_lib.delete_float_array(prediction.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), npl[-1])
 
 
-'''
-def save_linear_model(model, filename):
-    lib.save_linear_model.argtypes = [
-        ctypes.POINTER(LinearRegressionModel),
-        ctypes.POINTER(ctypes.c_char)
-    ]
 
-    lib.save_linear_model.restypes = None
+def save_mlp_model(model_ptr : int, filename: str):
+    model_ptr = ctypes.c_void_p(model_ptr)
+    filename_cstr = ctypes.c_char_p(filename.encode("utf-8"))
+    ml_lib.save_mlp_model(model_ptr, filename_cstr)
 
 
-def load_linear_model(filename):
-    lib.load_linear_model.argtypes = [ctypes.POINTER(ctypes.c_char)]
-    lib.load_linear_model.restype = ctypes.POINTER(LinearRegressionModel)
 
-    return lib.load_linear_model(filename)
-'''
+def load_mlp_model(filename):
+    # Convertir le nom de fichier en une chaîne de caractères C
+    filename_cstr = ctypes.c_char_p(filename.encode("utf-8"))
 
-# Load the Rust library using ctypes
+    # Appeler la fonction Rust load_mlp_model
+    model_ptr = ml_lib.load_mlp_model(filename_cstr)
+
+    # Retourner le pointeur vers le modèle
+    return model_ptr
