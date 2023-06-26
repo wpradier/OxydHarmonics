@@ -63,12 +63,14 @@ def train_linear_model(
 def predict_linear_model(
         model: int,
         sample_input: np.ndarray,
-        lines: int
+        lines: int,
+        is_classification: bool
 ):
     ml_lib.predict_linear_model.argtypes = [
         ctypes.c_void_p,
         ctypes.POINTER(ctypes.c_double),
-        ctypes.c_int32
+        ctypes.c_int32,
+        ctypes.c_bool
     ]
     ml_lib.predict_linear_model.restype = ctypes.c_double
 
@@ -76,10 +78,44 @@ def predict_linear_model(
         model,
         sample_input.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
         lines,
+        is_classification
     )
 
     return res
 
+
+def test_linear_model(
+        model: int,
+        x_test: np.ndarray,
+        lines: int,
+        columns: int,
+        y_test: np.ndarray,
+        y_test_columns: int,
+        pas: float,
+        is_classification: bool
+):
+    ml_lib.test_linear_model.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_double),
+        ctypes.c_int32,
+        ctypes.c_int32,
+        ctypes.POINTER(ctypes.c_double),
+        ctypes.c_int32,
+        ctypes.c_double,
+        ctypes.c_bool
+    ]
+    ml_lib.test_linear_model.restype = ctypes.c_double
+
+    return ml_lib.test_linear_model(
+        model,
+        x_test.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        lines,
+        columns,
+        y_test.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        y_test_columns,
+        pas,
+        is_classification
+    )
 
 """
 

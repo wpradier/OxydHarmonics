@@ -43,7 +43,8 @@ extern "C" fn train_linear_model(model: *mut LinearModelArys,
 }
 
 #[no_mangle]
-extern "C" fn predict_linear_model(model: *mut LinearModelArys, sample_input: *const f64, lines: i32) -> f64 {
+extern "C" fn predict_linear_model(model: *mut LinearModelArys, sample_input: *const f64, lines: i32,
+                                   is_classification: bool) -> f64 {
     unsafe {
         let linear_model: &mut LinearModelArys = model.as_mut().unwrap();
 
@@ -53,8 +54,29 @@ extern "C" fn predict_linear_model(model: *mut LinearModelArys, sample_input: *c
 
 
         println!(" predict : {:?}", _sample_input);
-        return linear_model.predict(_sample_input);
+        return linear_model.predict(_sample_input, is_classification);
     }
+
+}
+
+#[no_mangle]
+extern "C" fn test_linear_model(model: *mut LinearModelArys,
+                                 x_test: *const f64, lines: i32, columns: i32,
+                                 y_test: *const f64, y_columns: i32,
+                                 pas: f64, is_classification: bool) -> f64 {
+    unsafe {
+        let linear_model: &mut LinearModelArys = model.as_mut().unwrap();
+
+        let x_test_slice = slice::from_raw_parts(x_test, (lines * columns) as usize);
+
+        let y_test_slice = slice::from_raw_parts(y_test, y_columns as usize);
+
+        let _x_test = Array2::from_shape_vec((lines as usize, columns as usize), x_test_slice.to_vec()).unwrap();
+        let _y_test = Array2::from_shape_vec((y_columns as usize, 1), y_test_slice.to_vec()).unwrap();
+
+        return linear_model.test(_x_test, _y_test, pas, is_classification);
+    }
+
 
 }
 

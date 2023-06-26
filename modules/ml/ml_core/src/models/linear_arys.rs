@@ -1,4 +1,5 @@
-use ndarray::{array, Array1, Array2, concatenate, Axis, Ix2, s, Array};
+use ndarray::{array, Array1, Array2, concatenate, Axis, Ix2, s, Array, ArrayBase, OwnedRepr};
+use ndarray_rand::rand_distr::num_traits::abs;
 
 #[allow(non_snake_case)]
 pub struct LinearModelArys {
@@ -56,9 +57,11 @@ impl LinearModelArys {
 
                     let loss = hyp - Y_i;
                     grad += loss[[0]] * X_i[j];
+                    //println!("{}", loss[[0]]);
                 }
                 //should implement the cost function W = W - (α / n) Σ (WᵗX - Y) * X
                 // for each W at the same time
+
                 Wbis[j] = w - (alpha / mf) * grad;
             }
             // updating W with new values
@@ -68,12 +71,38 @@ impl LinearModelArys {
     }
 
 
-    pub fn predict(&self, x_predict : Array1<f64>) -> f64 {
+    pub fn predict(&self, x_predict : Array1<f64>, is_classification: bool) -> f64 {
         let bias : Array1<f64> = array![1.0];
         let x = concatenate![Axis(0), bias, x_predict];
-        println!("PREDICT : x : {:?}, W : {:?}", x, self.W);
+        let res = self.W.dot(&x);
 
-        if self.W.dot(&x) > 0. { 1. } else { 0. }
+        if is_classification {
+            if res >= 0.5 { 1. } else { 0. }
+        }
+        else {
+            res
+        }
+    }
+
+    pub fn test(&self, X_test : Array2<f64>, Y_test : Array2<f64>, pas : f64, is_classification : bool)
+                -> f64{
+        let m  = X_test.nrows(); // number of training example
+        let y_flattened: Array2<f64> = Y_test.clone().into_shape((1, X_test.nrows())).unwrap();
+        let Y_test= y_flattened.slice(s![0, ..]).into_owned();
+
+        let mut res = 0.;
+        for i in 0..m {
+            let X_i = X_test.slice(s![i, ..]);
+
+            //getting the training example output
+            let Y_i = &Y_test[i];
+            let y_pred = self.predict(X_i.into_owned(), is_classification);
+
+            if abs(Y_i - y_pred) < pas {
+                res += 1.;
+            }
+        }
+        return (res / m as f64) * 100.
     }
 }
 
@@ -98,14 +127,37 @@ mod tests {
         [1.0]
     ];
 
+
         let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
 
-        model._fit(x, y, 50000, 0.01, true);
-        let res1 = model.predict(array![1., 8.]);
-        let res1_sig = sig(&res1);
+        model._fit(x.clone(), y.clone(), 50000, 0.01, true);
+        let res1 = model.predict(array![1., 8.], true);
+        let test_result = model.test(x, y, 0.1, true, );
 
-        println!("{}", res1);
-        println!("{}", res1_sig);
+        println!("{}\n", test_result);
+
+    }
+
+    #[test]
+     fn test_linear_regression_2() {
+        let x: Array2<f64> = array![[1., 0.], [0., 1.], [0., 0.], [1., 1.]];
+        let y : Array2<f64> = array![
+            [1.],
+            [1.],
+            [0.],
+            [0.]
+        ];
+
+
+
+        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+
+        model._fit(x.clone(), y.clone(), 50000, 0.01, true);
+        let res1 = model.predict(array![1., 0.], true);
+        let test_result = model.test(x, y, 0.1, true, );
+        println!("{}, {}", test_result, res1);
+
+        assert_eq!(res1, 1.);
 
     }
 }
