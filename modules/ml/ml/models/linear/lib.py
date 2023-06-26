@@ -28,7 +28,7 @@ def train_linear_model(
         x_train: np.ndarray,
         lines: int,
         columns: int,
-        y_train: List[int],
+        y_train: np.ndarray,
         y_train_columns: int,
         alpha: float,
         epochs: int,
@@ -59,16 +59,29 @@ def train_linear_model(
         is_classification
     )
 
-"""
 
-def predict_linear_model(model, sample_input, lines):
-    my_lib.predict_linear_model.argtypes = [
-        ctypes.POINTER(LinearRegressionModel),
+def predict_linear_model(
+        model: int,
+        sample_input: np.ndarray,
+        lines: int
+):
+    ml_lib.predict_linear_model.argtypes = [
+        ctypes.c_void_p,
         ctypes.POINTER(ctypes.c_double),
         ctypes.c_int32
     ]
-    my_lib.predict_linear_model.restype = ctypes.c_double
+    ml_lib.predict_linear_model.restype = ctypes.c_double
 
+    res = ml_lib.predict_linear_model(
+        model,
+        sample_input.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        lines,
+    )
+
+    return res
+
+
+"""
 
 def save_linear_model(model, filename):
     lib.save_linear_model.argtypes = [
