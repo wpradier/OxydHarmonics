@@ -1,5 +1,6 @@
-use ndarray::{array, Array1, Array2, ArrayView, concatenate, Axis, Ix2, s, Array};
+use ndarray::{array, Array1, Array2, concatenate, Axis, Ix2, s, Array};
 
+#[allow(non_snake_case)]
 pub struct LinearModelArys {
     pub W : Array1<f64>
 }
@@ -10,19 +11,31 @@ impl LinearModelArys {
     }
 
     // Gradiant descent for multiple features
-    pub fn _fit(&mut self, X_train: Array2<f64>, Y_train: Array2<f64>, epoch: i32, alpha: f64, is_classification: bool) {
+
+
+
+    #[allow(non_snake_case)]
+    pub fn _fit(&mut self,
+                X_train: Array2<f64>,
+                Y_train: Array2<f64>,
+                epoch: i32,
+                alpha: f64,
+                is_classification: bool
+    ) {
 
         //println!("ENTERING THE FIT {:?}, {:?}, {}, {}, {}", X_train, Y_train, epoch, alpha, is_classification);
         let m  = X_train.nrows(); // number of training example
         let mf : f64 = m as f64; // number of training example as float 64
         let bias = Array::<f64, Ix2>::from_elem((X_train.shape()[0], 1), 1.);
 
+
         let X_train = concatenate![Axis(1), bias, X_train];
+
 
         for _ in 0..epoch {
             let mut Wbis = self.W.clone();
             for j in 0..(self.W.shape()[0]) {
-                let mut w = Wbis[j];
+                let w = Wbis[j];
                 let mut grad = 0.;
                 //println!("j : {},\n{:?}", j, X_train);
 
@@ -60,7 +73,7 @@ impl LinearModelArys {
         let x = concatenate![Axis(0), bias, x_predict];
         println!("PREDICT : x : {:?}, W : {:?}", x, self.W);
 
-        self.W.dot(&x)
+        if self.W.dot(&x) > 0. { 1. } else { 0. }
     }
 }
 
