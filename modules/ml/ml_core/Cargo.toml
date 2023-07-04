@@ -13,7 +13,10 @@ path = "src/lib.rs"
 ndarray = "0.15.6"
 ndarray-rand = "0.14.0"
 rand = "0.8.5"
+tensorboard-rs = "0.5.9"
 
 [[bin]]
 name = "kmeans"
 path = "src/rbf_net.rs"
+
+
