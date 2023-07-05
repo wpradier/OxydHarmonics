@@ -2,10 +2,10 @@ import ctypes
 from typing import Optional, List
 import numpy as np
 
-#lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")  # Replace with the actual library filename
+# lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")  # Replace with the actual library filename
 # lib = ctypes.CDLL("your_rust_library.so")  # Replace with the actual library filename
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
+ml_lib = ctypes.CDLL("../../../ml_core/target/debug/ml_core.dll")
 
 
 def create_linear_model(length: int) -> int:
@@ -118,6 +118,7 @@ def test_linear_model(
         is_classification
     )
 
+
 """
 
 def save_linear_model(model, filename):
@@ -143,3 +144,14 @@ def load_linear_model(filename):
 
 # Load the Rust library using ctypes
 """
+
+
+def loadDataSet(path):
+    DATA_train = np.genfromtxt(path, delimiter=',')
+    X = DATA_train[:, 1:]
+    Y = DATA_train[:, :1]
+    X_size = len(X)
+    X_row_size = len(X[0])
+    all_training_inputs = np.float64(X.flatten())
+    all_training_expected_outputs = np.float64(Y.flatten())
+    return all_training_inputs, all_training_expected_outputs, X_size, X_row_size
