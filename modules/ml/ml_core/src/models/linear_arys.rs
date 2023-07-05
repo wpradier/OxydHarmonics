@@ -29,9 +29,7 @@ impl LinearModelArys {
         let mf : f64 = m as f64; // number of training example as float 64
         let bias = Array::<f64, Ix2>::from_elem((X_train.shape()[0], 1), 1.);
 
-
         let X_train = concatenate![Axis(1), bias, X_train];
-
 
         for _ in 0..epoch {
             let mut Wbis = self.W.clone();
@@ -86,6 +84,7 @@ impl LinearModelArys {
 
     pub fn test(&self, X_test : Array2<f64>, Y_test : Array2<f64>, pas : f64, is_classification : bool)
                 -> f64{
+        //println!("{}", X_test);
         let m  = X_test.nrows(); // number of training example
         let y_flattened: Array2<f64> = Y_test.clone().into_shape((1, X_test.nrows())).unwrap();
         let Y_test= y_flattened.slice(s![0, ..]).into_owned();
@@ -97,6 +96,9 @@ impl LinearModelArys {
             //getting the training example output
             let Y_i = &Y_test[i];
             let y_pred = self.predict(X_i.into_owned(), is_classification);
+
+            //println!(" to predict {} * {} ?", X_i, self.W);
+            println!("{} - {} < {} ?", Y_i, y_pred, pas);
 
             if abs(Y_i - y_pred) < pas {
                 res += 1.;
@@ -140,7 +142,11 @@ mod tests {
 
     #[test]
      fn test_linear_regression_2() {
-        let x: Array2<f64> = array![[1., 0.], [0., 1.], [0., 0.], [1., 1.]];
+        let x: Array2<f64> = array![
+            [1., 0., 1., 0., 0.],
+            [0., 1., 0., 1., 0.],
+            [0., 0., 0., 0., 0.],
+            [1., 1., 1., 1., 1.]];
         let y : Array2<f64> = array![
             [1.],
             [1.],
@@ -150,14 +156,50 @@ mod tests {
 
 
 
-        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1, 0.1, 0.1, 0.1]};
 
         model._fit(x.clone(), y.clone(), 50000, 0.01, true);
-        let res1 = model.predict(array![1., 0.], true);
+        let res1 = model.predict(array![1., 0., 1., 0., 0.], true);
+        //let res2 = model.predict(array![0., 1.], true);
+        //let res3 = model.predict(array![0., 0.], true);
+        // let res4 = model.predict(array![1., 1.], true);
         let test_result = model.test(x, y, 0.1, true, );
         println!("{}, {}", test_result, res1);
 
         assert_eq!(res1, 1.);
+
+    }
+
+
+    #[test]
+    fn test_linear_regression_3D_1() {
+        let x: Array2<f64> = array!
+        [
+            [1., 1.],
+            [2., 2.],
+            [3., 1.]
+        ];
+
+        let y : Array2<f64> = array!
+        [
+            [2.],
+            [3.],
+            [2.5]
+        ];
+
+
+
+        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+
+        model._fit(x.clone(), y.clone(), 50000, 0.01, false);
+        let res1 = model.predict(array![1., 1.], false);
+        //let res2 = model.predict(array![0., 1.], true);
+        //let res3 = model.predict(array![0., 0.], true);
+        // let res4 = model.predict(array![1., 1.], true);
+        let test_result = model.test(x, y, 0.1, false);
+        println!("{}, {}", test_result, res1);
+
+        assert_eq!(test_result, 100.);
 
     }
 }

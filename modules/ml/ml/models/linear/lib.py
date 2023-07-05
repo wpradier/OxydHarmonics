@@ -105,6 +105,7 @@ def test_linear_model(
         ctypes.c_bool
     ]
     ml_lib.test_linear_model.restype = ctypes.c_double
+    print(x_test)
 
     return ml_lib.test_linear_model(
         model,

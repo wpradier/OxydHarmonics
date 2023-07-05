@@ -71,7 +71,12 @@ extern "C" fn test_linear_model(model: *mut LinearModelArys,
 
         let y_test_slice = slice::from_raw_parts(y_test, y_columns as usize);
 
+        println!("column : {}\n row : {}\n{:?}", colums, row, x_test_slice);
+
+
         let _x_test = Array2::from_shape_vec((lines as usize, columns as usize), x_test_slice.to_vec()).unwrap();
+
+        println!("{:?}", _x_test);
         let _y_test = Array2::from_shape_vec((y_columns as usize, 1), y_test_slice.to_vec()).unwrap();
 
         return linear_model.test(_x_test, _y_test, pas, is_classification);
