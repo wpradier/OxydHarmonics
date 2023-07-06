@@ -29,7 +29,7 @@ extern "C" fn train_linear_model(model: *mut LinearRegressionModel,
             .map(|x| x.to_vec())
             .collect::<Vec<_>>();
 
-        let output_dataset = Vec::from_raw_parts(y_train, y_train_columns, y_train_columns);
+        let output_dataset = slice_from_raw_parts(y_train, y_train_columns).as_ref().unwrap().to_vec();
 
         println!("INPUT VEC: {:?}", input_dataset);
         println!("OUTPUT VEC: {:?}", output_dataset);
@@ -42,7 +42,7 @@ extern "C" fn train_linear_model(model: *mut LinearRegressionModel,
 #[no_mangle]
 extern "C" fn predict_linear_model(model: *mut LinearRegressionModel, sample_input: *mut f64, columns: usize, is_classification: bool) -> f64 {
     unsafe {
-        let input_vec = Vec::from_raw_parts(sample_input, columns, columns + 1);
+        let input_vec = slice_from_raw_parts(sample_input, columns).as_ref().unwrap().to_vec();
 
         linear::predict(model.as_ref().unwrap(), &input_vec, is_classification)
     }

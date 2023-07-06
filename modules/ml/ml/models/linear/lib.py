@@ -107,9 +107,6 @@ def load_linear_model(filename):
 
 if __name__ == '__main__':
     print("STARTING IN PYTHON")
-
-    print("REGRESSION")
-    model = create_linear_model(3)
     X = np.array([
         [1., 1.],
         [2., 3.],
@@ -137,6 +134,8 @@ if __name__ == '__main__':
         7.
     ])
 
+    print("REGRESSION")
+    model = create_linear_model(3)
     is_classif = False
 
     print(f"PREDICT BEFORE TRAIN: {predict_linear_model(model, np.array([0, 0]), is_classif)}")
@@ -153,4 +152,24 @@ if __name__ == '__main__':
     print(f"PREDICT AFTER TRAIN: {res}")
 
     destroy_linear_model(model)
+
+    print("CLASSIFICATION")
+    model = create_linear_model(3)
+    is_classif = True
+
+    print(f"PREDICT BEFORE TRAIN: {predict_linear_model(model, np.array([0, 0]), is_classif)}")
+    train_linear_model(
+        model,
+        X,
+        Y_class if is_classif else Y_reg,
+        0.001,
+        5000,
+        is_classif
+    )
+    print("TRAIN END")
+    res = predict_linear_model(model, np.array([0, 0]), is_classif)
+    print(f"PREDICT AFTER TRAIN: {res}")
+
+    destroy_linear_model(model)
+
     print("END PYTHON")
