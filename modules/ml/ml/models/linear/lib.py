@@ -1,8 +1,6 @@
 import ctypes
-from typing import Optional, List
-
-# lib = ctypes.CDLL("your_rust_library.dll")  # Replace with the actual library filename
-# lib = ctypes.CDLL("your_rust_library.so")  # Replace with the actual library filename
+from typing import Optional
+import numpy as np
 
 ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
 
@@ -24,15 +22,16 @@ def create_linear_model(length: int) -> Optional[int]:
 # TODO inflate x_train (and y_train)
 def train_linear_model(
         model: int,
-        x_train: List[int],
-        lines: int,
-        columns: int,
-        y_train: List[int],
-        y_train_columns: int,
+        x_train: np.ndarray,
+        y_train: np.ndarray,
         alpha: float,
         epochs: int,
         is_classification: bool
 ):
+
+    c_x_train = x_train.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    c_y_train = y_train.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
     ml_lib.train_linear_model.argtypes = [
         ctypes.c_void_p,
         ctypes.POINTER(ctypes.c_double),
@@ -48,24 +47,35 @@ def train_linear_model(
 
     return ml_lib.train_linear_model(
         model,
-        x_train,
-        lines,
-        columns,
-        y_train,
-        y_train_columns,
+        c_x_train,
+        len(x_train),
+        len(x_train[0]),
+        c_y_train,
+        len(y_train),
         alpha,
         epochs,
         is_classification
     )
 
 
-def predict_linear_model(model, sample_input, lines):
-    lib.predict_linear_model.argtypes = [
-        ctypes.POINTER(LinearRegressionModel),
+def predict_linear_model(model: int, sample_input: np.ndarray, is_classification: bool):
+    ml_lib.predict_linear_model.argtypes = [
+        ctypes.c_void_p,
         ctypes.POINTER(ctypes.c_double),
-        ctypes.c_int32
+        ctypes.c_int32,
+        ctypes.c_bool
     ]
-    lib.predict_linear_model.restype = ctypes.c_double
+    ml_lib.predict_linear_model.restype = ctypes.c_double
+
+    c_sample = sample_input.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    result = ml_lib.predict_linear_model(
+        model,
+        c_sample,
+        len(sample_input),
+        is_classification
+    )
+
+    return result
 
 
 def save_linear_model(model: int, filename: bytes):
@@ -79,9 +89,11 @@ def save_linear_model(model: int, filename: bytes):
     ml_lib.save_linear_model(model, filename)
 
 
-def destroy_linear_model(model):
-    lib.destroy_linear_model.argtypes = [ctypes.POINTER(LinearRegressionModel)]
-    lib.destroy_linear_model.restypes = None
+def destroy_linear_model(model: int):
+    ml_lib.destroy_linear_model.argtypes = [ctypes.c_void_p]
+    ml_lib.destroy_linear_model.restypes = None
+
+    return ml_lib.destroy_linear_model(model)
 
 
 def load_linear_model(filename):
@@ -95,11 +107,50 @@ def load_linear_model(filename):
 
 if __name__ == '__main__':
     print("STARTING IN PYTHON")
-    model = create_linear_model(4)
-    print("VALUE: {}".format(model))
-    print("CALLING SAVE MODEL")
-    save_linear_model(
+
+    print("REGRESSION")
+    model = create_linear_model(3)
+    X = np.array([
+        [1., 1.],
+        [2., 3.],
+        [3., 3.],
+        [6., 4.],
+        [10., 3.],
+        [4, -1]
+    ])
+
+    Y_class = np.array([
+        1.,
+        -1.,
+        -1.,
+        -1.,
+        -1.,
+        1.
+    ])
+
+    Y_reg = np.array([
+        2.5,
+        -4.,
+        -4.5,
+        -9.,
+        -8.,
+        7.
+    ])
+
+    is_classif = False
+
+    print(f"PREDICT BEFORE TRAIN: {predict_linear_model(model, np.array([0, 0]), is_classif)}")
+    train_linear_model(
         model,
-        b'lol.txt'
+        X,
+        Y_class if is_classif else Y_reg,
+        0.001,
+        5000,
+        is_classif
     )
+    print("TRAIN END")
+    res = predict_linear_model(model, np.array([0, 0]), is_classif)
+    print(f"PREDICT AFTER TRAIN: {res}")
+
+    destroy_linear_model(model)
     print("END PYTHON")
