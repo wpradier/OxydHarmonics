@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
+nalgebra = "0.32.2"
 ndarray = "0.15.6"
 ndarray-rand = "0.14.0"
 rand = "0.8.5"
