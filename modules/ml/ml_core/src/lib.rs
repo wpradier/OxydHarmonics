@@ -66,20 +66,21 @@ extern "C" fn train_mlp_model(model_ptr: *mut PmcModel, X_train: *const f64, lin
 
 
 #[no_mangle]
-extern "C" fn predict_mlp_model(model: *mut PmcModel, sample_inputs: *const f64, len_columns : usize,
-                                is_classification: bool) -> *mut f64 {
-                                    unsafe {
-                                        let model_ref = model.as_mut().unwrap();
-                                        let inputs: [f64; 2] = {
-                                            let input_slice = slice::from_raw_parts(sample_inputs, len_columns);
-                                            [input_slice[0], input_slice[1]]  // Copy values into the array
-                                        };
-                                        let prediction = predict_pmc(model_ref, inputs, is_classification);
-                                        let fake_output = prediction;
+extern "C" fn predict_mlp_model(model: *mut PmcModel, sample_inputs: *const f64, len_columns: usize, is_classification: bool) -> *mut f64 {
+    unsafe {
+        let model_ref = model.as_mut().unwrap();
+        let inputs: Vec<f64> = {
+            let input_slice = std::slice::from_raw_parts(sample_inputs, len_columns);
+            input_slice.to_vec()
+        };
+        let prediction = predict_pmc(model_ref, inputs, is_classification);
+        let fake_output: Vec<f64> = prediction;
 
-                                        fake_output.leak().as_mut_ptr()
-                                    }
-                                }
+        Box::<[f64]>::into_raw(fake_output.into_boxed_slice()) as *mut f64
+
+    }
+}
+
 
 #[no_mangle]
 extern "C" fn delete_mlp_model(model: *mut PmcModel) {
@@ -98,7 +99,6 @@ extern "C" fn delete_float_array(arr: *mut f32, arr_len: i32) {
 
 
 
-
 #[no_mangle]
 extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
     unsafe {
@@ -106,7 +106,7 @@ extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
         let filename_cstr = CStr::from_ptr(filename);
         let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
 
-        // Serialize the model
+        // Serialize the model to JSON
         let serialized_model = serde_json::to_string(model_ref).expect("Failed to serialize the model");
 
         // Save the serialized model to the file
@@ -116,7 +116,6 @@ extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
         println!("MLP model saved to file: {}", filename_str);
     }
 }
-
 
 #[no_mangle]
 extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
@@ -129,7 +128,7 @@ extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
         let mut serialized_model = String::new();
         file.read_to_string(&mut serialized_model).expect("Failed to read the serialized model from the file");
 
-        // Deserialize the model
+        // Deserialize the model from JSON
         let deserialized_model: PmcModel = serde_json::from_str(&serialized_model).expect("Failed to deserialize the model");
 
         // Allocate memory for the model and copy the deserialized model into it
@@ -140,7 +139,6 @@ extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
         model_ptr
     }
 }
-
 
 
 
