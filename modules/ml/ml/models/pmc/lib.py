@@ -72,19 +72,13 @@ def delete_float_array(prediction, npl : List):
 
 
 
-def save_mlp_model(model_ptr : int, filename: str):
-    model_ptr = ctypes.c_void_p(model_ptr)
+def save_mlp_model(model_ptr: int, filename: str):
+    model = ctypes.c_void_p(model_ptr)
     filename_cstr = ctypes.c_char_p(filename.encode("utf-8"))
-    ml_lib.save_mlp_model(model_ptr, filename_cstr)
+    ml_lib.save_mlp_model(model, filename_cstr)
 
-
-
-def load_mlp_model(filename):
-    # Convertir le nom de fichier en une chaîne de caractères C
+def load_mlp_model(filename: str) -> int:
     filename_cstr = ctypes.c_char_p(filename.encode("utf-8"))
-
-    # Appeler la fonction Rust load_mlp_model
     model_ptr = ml_lib.load_mlp_model(filename_cstr)
+    return ctypes.cast(model_ptr, ctypes.c_void_p).value
 
-    # Retourner le pointeur vers le modèle
-    return model_ptr

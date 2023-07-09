@@ -14,6 +14,7 @@ use serde_json;
 
 #[no_mangle]
 extern "C" fn create_mlp_model(npl: *mut i32, npl_len: i32) -> *mut PmcModel {
+    println!("create_mlp_model");
     unsafe {
         let ptr: *mut usize = npl as *mut usize;
         let len: usize = npl_len as usize;
@@ -31,6 +32,8 @@ extern "C" fn create_mlp_model(npl: *mut i32, npl_len: i32) -> *mut PmcModel {
         let output_model = Box::new(PmcModel { d: val_d, L: val_l, W: val_w, X: val_x, deltas: val_deltas });
 
         let mymodel = Box::leak(output_model);
+        println!("create_mlp_model done");
+
         mymodel
     }
 }
@@ -39,6 +42,7 @@ extern "C" fn create_mlp_model(npl: *mut i32, npl_len: i32) -> *mut PmcModel {
 extern "C" fn train_mlp_model(model_ptr: *mut PmcModel, X_train: *const f64, lines: i32,
                               columns: i32, y_train: *const f64, output_columns: i32,
                               alpha: f64, num_iter: i32, is_classification: bool) {
+    println!("train_mlp_model");
     unsafe {
         let mut model = model_ptr.as_mut().unwrap();
         
@@ -61,8 +65,10 @@ extern "C" fn train_mlp_model(model_ptr: *mut PmcModel, X_train: *const f64, lin
             .collect::<Vec<Vec<f64>>>();
 
         train_pmc(&mut model, X_train, y_train, is_classification, num_iter, alpha);
-    }
+        println!("train_mlp_model done");
+    
 }
+                              }
 
 
 #[no_mangle]
@@ -100,9 +106,9 @@ extern "C" fn delete_float_array(arr: *mut f32, arr_len: i32) {
 
 
 #[no_mangle]
-extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
+pub extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
     unsafe {
-        let model_ref = model.as_mut().unwrap();
+        let model_ref = &*model;
         let filename_cstr = CStr::from_ptr(filename);
         let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
 
@@ -118,7 +124,7 @@ extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
 }
 
 #[no_mangle]
-extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
+pub extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
     unsafe {
         let filename_cstr = CStr::from_ptr(filename);
         let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
@@ -139,7 +145,3 @@ extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
         model_ptr
     }
 }
-
-
-
-

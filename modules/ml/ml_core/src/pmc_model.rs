@@ -207,36 +207,6 @@ pub fn calculate_loss(predictions: &[f64], labels: &[f64], is_classification: bo
     }
 }
 
-/* pub fn create_batches<T: Clone>(
-    batch_size: usize,
-    features: &[Vec<T>],
-    labels: &[Vec<T>],
-) -> Vec<(Vec<Vec<T>>, Vec<Vec<T>>)> {
-    let num_samples = features.len();
-    let num_batches = (num_samples + batch_size - 1) / batch_size;
-
-    let mut batches = Vec::with_capacity(num_batches);
-
-    let mut indices: Vec<usize> = (0..num_samples).collect();
-    indices.shuffle(&mut rand::thread_rng());
-
-    for i in 0..num_batches {
-        let start_idx = i * batch_size;
-        let end_idx = (start_idx + batch_size).min(num_samples);
-
-        let mut batch_features = Vec::with_capacity(end_idx - start_idx);
-        let mut batch_labels = Vec::with_capacity(end_idx - start_idx);
-
-        for j in start_idx..end_idx {
-            batch_features.push(features[indices[j]].clone());
-            batch_labels.push(labels[indices[j]].clone());
-        }
-
-        batches.push((batch_features, batch_labels));
-    }
-
-    batches
-} */
 
 
 
@@ -259,12 +229,9 @@ F: AsRef<[f64]> + Clone,
     let formatted_time = current_time.format("%Y-%m-%d_%H-%M-%S").to_string();
     let log_path = format!("data_{}", formatted_time);
 
-    //let labels_as_ref: Vec<Vec<f64>> = labels.iter().map(|label| label.as_ref().to_vec()).collect();
 
     for _ in 0..num_iter {
-        //let batches = create_batches(batch_size, &features.iter().map(|item| item.as_ref().to_vec()).collect::<Vec<Vec<f64>>>(), &labels_as_ref);
-
-        //for (batch_features, batch_labels) in batches {
+    
                 let mut rng = rand::thread_rng();
                 let k = rng.gen_range(0..features.len());
                 let input_k = &features[k];
