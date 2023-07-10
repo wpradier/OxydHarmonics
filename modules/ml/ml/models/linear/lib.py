@@ -29,8 +29,8 @@ def train_linear_model(
         is_classification: bool
 ):
 
-    c_x_train = x_train.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-    c_y_train = y_train.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    c_x_train = x_train.astype(float).flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    c_y_train = y_train.astype(float).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     ml_lib.train_linear_model.argtypes = [
         ctypes.c_void_p,
@@ -67,7 +67,7 @@ def predict_linear_model(model: int, sample_input: np.ndarray, is_classification
     ]
     ml_lib.predict_linear_model.restype = ctypes.c_double
 
-    c_sample = sample_input.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    c_sample = sample_input.astype(float).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     result = ml_lib.predict_linear_model(
         model,
         c_sample,

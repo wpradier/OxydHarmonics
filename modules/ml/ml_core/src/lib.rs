@@ -31,8 +31,8 @@ extern "C" fn train_linear_model(model: *mut LinearRegressionModel,
 
         let output_dataset = slice_from_raw_parts(y_train, y_train_columns).as_ref().unwrap().to_vec();
 
-        println!("INPUT VEC: {:?}", input_dataset);
-        println!("OUTPUT VEC: {:?}", output_dataset);
+        //println!("INPUT VEC: {:?}", input_dataset);
+        //println!("OUTPUT VEC: {:?}", output_dataset);
 
 
         linear::train(model.as_mut().unwrap(), input_dataset, output_dataset, alpha, epochs, is_classification);
