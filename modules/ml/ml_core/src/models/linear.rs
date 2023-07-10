@@ -1,5 +1,6 @@
 use rand::{Rng, distributions::Uniform};
 use libm;
+use crate::utils::vec::initialize_weights;
 
 #[derive(Debug)]
 pub struct LinearRegressionModel {
@@ -8,12 +9,8 @@ pub struct LinearRegressionModel {
 
 
 pub fn create(len: usize) -> LinearRegressionModel {
-    let mut rng = rand::thread_rng();
-    let range = Uniform::from((-1.)..(1.));
-    let vals: Vec<f64> = (0..len).map(|_| rng.sample(&range)).collect();
-
     LinearRegressionModel {
-        weights: vals
+        weights: initialize_weights(len)
     }
 }
 

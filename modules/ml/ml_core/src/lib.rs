@@ -6,6 +6,7 @@ use crate::models::linear::{self, LinearRegressionModel};
 
 
 mod models;
+mod utils;
 
 
 #[no_mangle]
