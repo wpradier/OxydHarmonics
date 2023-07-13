@@ -119,16 +119,28 @@ def test_linear_model(
     )
 
 
-"""
-
-def save_linear_model(model, filename):
-    lib.save_linear_model.argtypes = [
-        ctypes.POINTER(LinearRegressionModel),
-        ctypes.POINTER(ctypes.c_char)
+def save_linear_model(
+        model: int,
+        filename: str
+):
+    ml_lib.save_linear_model.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_char_p,
     ]
 
-    lib.save_linear_model.restypes = None
+    ml_lib.save_linear_model.restype = None
+    file_cstr = filename.encode("utf-8")
 
+    print(file_cstr)
+    print(type(file_cstr))
+
+    ml_lib.save_linear_model(
+        model,
+        file_cstr
+    )
+
+
+"""
 
 def destroy_linear_model(model):
     lib.destroy_linear_model.argtypes = [ctypes.POINTER(LinearRegressionModel)]

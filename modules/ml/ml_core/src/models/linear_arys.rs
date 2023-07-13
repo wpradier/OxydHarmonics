@@ -1,4 +1,10 @@
+use std::error::Error;
+use std::fs::{File, read};
+use std::io;
+use std::path::Path;
+use csv::{ReaderBuilder, WriterBuilder};
 use ndarray::{array, Array1, Array2, concatenate, Axis, Ix2, s, Array, ArrayBase, OwnedRepr};
+use ndarray_csv::{Array2Reader, Array2Writer};
 use ndarray_rand::rand_distr::num_traits::abs;
 
 #[allow(non_snake_case)]
@@ -106,6 +112,25 @@ impl LinearModelArys {
         }
         return (res / m as f64) * 100.
     }
+
+    pub fn save(&self, file_path: String) -> Result<(), Box<dyn Error>> {
+        {
+            let array2write : Array2<f64> = self.W.clone().insert_axis(Axis(0));
+            let file = File::create(file_path)?;
+            let mut writer = WriterBuilder::new().has_headers(false).from_writer(file);
+            writer.serialize_array2(&array2write)?;
+        }
+        Ok(())
+    }
+    pub fn load(file_path: String) -> Result<Box<LinearModelArys>, Box<dyn Error> >{
+        let file = File::open(file_path)?;
+        let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
+        let array_read: Array2<f64> = reader.deserialize_array2_dynamic()?;
+        let array1_from_read: Array1<f64> = array_read.slice(s![0, ..]).into_owned();
+        let model = Box::new(LinearModelArys{ W: array1_from_read});
+
+        Ok(model)
+    }
 }
 
 fn sig(a: &f64) -> f64 {
@@ -139,6 +164,57 @@ mod tests {
         println!("{}\n", test_result);
 
     }
+
+    #[test]
+    fn test_linear_regression_save() {
+        let x: Array2<f64> = array![
+        [1.0, 8.0],
+        [4.0, 2.0],
+        [5.0, 6.0]
+    ];
+        let y : Array2<f64> = array![
+        [0.],
+        [0.],
+        [1.0]
+    ];
+        let path = String::from("./testsave");
+
+
+        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+
+        model._fit(x.clone(), y.clone(), 50000, 0.01, true);
+
+        model.save(path);
+
+    }
+
+     #[test]
+    fn test_linear_regression_load() {
+         let path_origin = "./testloadm";
+        let x: Array2<f64> = array![
+        [1.0, 8.0],
+        [4.0, 2.0],
+        [5.0, 6.0]
+    ];
+        let y : Array2<f64> = array![
+        [0.],
+        [0.],
+        [1.0]
+    ];
+        let path = String::from(path_origin);
+         let path2 = String::from(path_origin);
+
+        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+
+        model._fit(x.clone(), y.clone(), 50000, 0.01, true);
+
+        model.save(path);
+
+         let new_model = LinearModelArys::load(path2).unwrap();
+
+         println!("{:?}", new_model.W);
+    }
+
 
     #[test]
      fn test_linear_regression_2() {

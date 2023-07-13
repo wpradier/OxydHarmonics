@@ -1,5 +1,6 @@
 mod models;
 
+use std::ffi::{c_char, CStr};
 use std::slice;
 use ndarray::{array, Array1, Array2};
 use ndarray_rand::RandomExt;
@@ -86,7 +87,30 @@ extern "C" fn test_linear_model(model: *mut LinearModelArys,
 }
 
 #[no_mangle]
-extern "C" fn save_linear_model(_model: *mut LinearModelArys, _filename: *const u8) {
+extern "C" fn save_linear_model(_model: *mut LinearModelArys, _filename: *const c_char) {
+    unsafe {
+        println!("enter save_linear");
+
+        let linear_model: &mut LinearModelArys = _model.as_mut().unwrap();
+
+        let new_path = CStr::from_ptr(_filename);
+
+        let path_str = new_path.to_str().expect("Invalid UTF-8 filename").to_owned();
+        let path = String::from(path_str);
+        println!("path : {}", path);
+        linear_model.save(path).expect("failed load? or success");
+    }
+
+}
+
+#[no_mangle]
+extern "C" fn load_linear_model(_filename: *const c_char) -> *mut LinearModelArys {
+    unsafe {
+
+        let new_path = CStr::from_ptr(_filename);
+        let model = LinearModelArys::load(new_path.to_string_lossy().into_owned()).unwrap() ;
+        Box::leak(model)
+    }
 
 }
 
@@ -95,9 +119,3 @@ extern "C" fn destroy_linear_model(_model: *mut LinearModelArys) {
 
 }
 
-#[no_mangle]
-extern "C" fn load_linear_model(_filename: *const u8) -> *mut LinearModelArys {
-    let model = Box::new(LinearModelArys { W: array![1.] });
-
-    Box::leak(model)
-}
