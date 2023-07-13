@@ -77,12 +77,10 @@ extern "C" fn load_linear_model(filename: *const u8) -> *mut LinearRegressionMod
 /*** MLP / MULTILAYER PERCEPTRON ***/
 
 #[no_mangle]
-extern "C" fn create_mlp_model(structure: *mut i32, len: i32) -> *mut MultilayerPerceptron {
+extern "C" fn create_mlp_model(structure: *mut usize, len: usize) -> *mut MultilayerPerceptron {
     unsafe {
         let mlp_structure = slice_from_raw_parts(structure, usize::try_from(len).unwrap())
-            .as_ref().unwrap()
-            .map(|x| usize::try_from(x).unwrap())
-            .collect::<Vec<usize>>();
+            .as_ref().unwrap().to_vec();
 
         let model = Box::new(mlp::create(mlp_structure));
 
