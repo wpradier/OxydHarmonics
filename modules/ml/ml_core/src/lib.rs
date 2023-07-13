@@ -98,6 +98,7 @@ extern "C" fn save_linear_model(_model: *mut LinearModelArys, _filename: *const 
         let path_str = new_path.to_str().expect("Invalid UTF-8 filename").to_owned();
         let path = String::from(path_str);
         println!("path : {}", path);
+
         linear_model.save(path).expect("failed load? or success");
     }
 

@@ -129,7 +129,7 @@ def save_linear_model(
     ]
 
     ml_lib.save_linear_model.restype = None
-    file_cstr = filename.encode("utf-8")
+    file_cstr = ctypes.c_char_p(filename.encode("utf-8"))
 
     print(file_cstr)
     print(type(file_cstr))
