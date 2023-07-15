@@ -3,10 +3,6 @@ use pmc_model::{create_pmc,train_pmc ,predict_pmc, PmcModel, save_pmc, load_pmc}
 use std::slice;
 use std::os::raw::c_char;
 use std::ffi::CStr;
-use std::fs::File;
-use std::io::{Read, Write};
-
-use serde_json;
 
 
 
@@ -66,9 +62,8 @@ extern "C" fn train_mlp_model(model_ptr: *mut PmcModel, X_train: *const f64, lin
 
         train_pmc(&mut model, X_train, y_train, is_classification, num_iter, alpha);
         println!("train_mlp_model done");
-    
+        }
 }
-                              }
 
 
 #[no_mangle]
@@ -81,7 +76,6 @@ extern "C" fn predict_mlp_model(model: *mut PmcModel, sample_inputs: *const f64,
         };
         let prediction = predict_pmc(model_ref, inputs, is_classification);
         let fake_output: Vec<f64> = prediction;
-        println!("preditiction {:?}", fake_output);
 
         Box::<[f64]>::into_raw(fake_output.into_boxed_slice()) as *mut f64
 
@@ -93,14 +87,16 @@ extern "C" fn predict_mlp_model(model: *mut PmcModel, sample_inputs: *const f64,
 extern "C" fn delete_mlp_model(model: *mut PmcModel) {
     unsafe {
         //Box::from_raw(model);
-        drop(Box::from_raw(model))
+        drop(Box::from_raw(model));
+        println!("delete_mlp_model done");
     }
 }
 
 #[no_mangle]
 extern "C" fn delete_float_array(arr: *mut f32, arr_len: i32) {
     unsafe {
-        Vec::from_raw_parts(arr, arr_len as usize, arr_len as usize)
+        Vec::from_raw_parts(arr, arr_len as usize, arr_len as usize);
+        println!("delete_float_array done");
     };
 }
 
@@ -117,6 +113,7 @@ extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
             Ok(m) => m,
             Err(_) => return std::ptr::null_mut(),
         };
+        println!("load_mlp_model done");
         Box::into_raw(Box::new(model))
     }
 }
@@ -134,5 +131,6 @@ extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) -> b
             return false;
         }
     }
+    println!("save_mlp_model done");
     true
 }

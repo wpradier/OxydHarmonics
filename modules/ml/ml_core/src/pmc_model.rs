@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::ops::Index;
 use rand::Rng;
 use tensorboard_rs::summary_writer::SummaryWriter;
-use rand::distributions::uniform::Uniform;
 use chrono::{DateTime, Local};
 use std::{f64::consts::E, usize};
 use serde::{Serialize, Deserialize};
@@ -11,7 +10,7 @@ use rand_distr::StandardNormal;
 use std::fs::File;
 use std::io::Write;
 use std::io::Read;
-use serde_json;
+use bincode::{serialize, deserialize};
 
 
 
@@ -96,8 +95,8 @@ pub fn create_pmc(npl: Vec<usize>) -> PmcModel {
             
             for j in 0..npl[l] + 1 {
                 let mut rng = rand::thread_rng();
-            let dist = StandardNormal;
-            let random_number = rng.sample(dist);
+                let dist = StandardNormal;
+                let random_number = rng.sample(dist);
                 W[l][i].push(if j == 0 { 0.0 } else { random_number });
             }
         }
@@ -173,36 +172,6 @@ where
     propagate_pmc(model, vec![input_k], is_classification);
     model.X[model.L][1..].to_vec()
 }
-
-pub fn calculate_accuracy(predictions: &[f64], labels: &[f64], is_classification: bool) -> f64 {
-    let num_samples = predictions.len();
-    let mut num_correct = 0;
-
-    if is_classification {
-        // Classification
-        for (prediction, label) in predictions.iter().zip(labels.iter()) {
-            let predicted_class = if *prediction >= 0.5 { 1.0 } else { 0.0 };
-            if predicted_class == *label {
-                num_correct += 1;
-            }
-        }
-    } else {
-        // Regression
-        for (prediction, label) in predictions.iter().zip(labels.iter()) {
-            let error = (prediction - label).abs();
-            if error < 0.5 {
-                num_correct += 1;
-            }
-        }
-    }
-
-    let accuracy = (num_correct as f64) / (num_samples as f64);
-    accuracy
-}
-
-
-
-
 
 pub fn calculate_loss(predictions: &[f64], labels: &[f64], is_classification: bool) -> f64 {
     let num_samples = predictions.len();
@@ -316,10 +285,6 @@ where
 
     model
 }
-        
-
-use std::io::prelude::*;
-use bincode::{serialize, deserialize};
 
 pub fn save_pmc(model: &PmcModel, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     let encoded: Vec<u8> = serialize(model)?;
@@ -364,16 +329,16 @@ fn main() {
    
         let mut model = create_pmc(vec![2,3,4 ,1]);
 
-        let mut model = load_pmc("filename.json").unwrap();
+        //let mut model = load_pmc("filename.json").unwrap();
    
-          /*  train_pmc(
+          train_pmc(
                &mut model,
                X.clone(),
                Y.clone(),
                false,
                10000,
                0.01,
-           ); */
+           ); 
    
            for sample in &X {
                let prediction = predict_pmc(&mut model, sample.clone(), false);
