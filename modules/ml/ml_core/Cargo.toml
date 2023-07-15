@@ -12,3 +12,5 @@ path = "src/lib.rs"
 [dependencies]
 rand = "0.8.5"
 libm = "0.2.7"
+tensorboard-rs = "0.5.9"
+chrono = "0.4.26"

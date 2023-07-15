@@ -1,4 +1,9 @@
+use std::cmp::max;
+use std::collections::HashMap;
+use chrono::{DateTime, Local};
+use libm::fmax;
 use rand::Rng;
+use tensorboard_rs::summary_writer::SummaryWriter;
 use crate::utils::vec::initialise_weight;
 
 pub struct MultilayerPerceptron {
@@ -106,9 +111,15 @@ pub fn train(
     epochs: u32,
     is_classification: bool
 ) {
+    let mut writer = SummaryWriter::new(&"./logdir");
+    let current_time: DateTime<Local> = Local::now();
+    let formatted_time = current_time.format("%Y-%m-%d_%H-%M-%S").to_string();
+    let log_path = format!("MLP_{}", formatted_time);
+    let mut loss_map = HashMap::new();
+    let mut acc_map = HashMap::new();
     let mut rng = rand::thread_rng();
 
-    for _ in 0..epochs {
+    for epoch in 0..epochs {
         for _ in 0..x_train.len() {
             let k = rng.gen_range(0..x_train.len());
 
@@ -143,7 +154,85 @@ pub fn train(
                 }
             }
         }
+
+        let loss = calculate_loss(
+            model,
+            x_train,
+            y_train,
+            is_classification,
+        );
+
+        let accuracy = calculate_accuracy(
+            model,
+            x_train,
+            y_train,
+            is_classification
+        );
+
+        //println!("epoch: {}, loss: {}, accuracy: {}", epoch + 1, loss, accuracy);
+        loss_map.insert(log_path.to_string(), loss as f32);
+        acc_map.insert(log_path.to_string(), accuracy as f32);
+
+        writer.add_scalars("epoch_loss", &loss_map, epoch as usize + 1);
+        writer.add_scalars("epoch_accuracy", &acc_map, epoch as usize + 1);
     }
+}
+
+fn calculate_loss(model: &mut MultilayerPerceptron,
+                  samples: &Vec<Vec<f64>>,
+                  expected_values: &Vec<Vec<f64>>,
+                  is_classification: bool) -> f64 {
+    let predictions: Vec<Vec<f64>> = samples
+            .iter()
+            .map(|input| {
+                let input_k = input.as_ref();
+                predict(model, input_k, is_classification)
+            })
+            .collect::<Vec<Vec<f64>>>();
+
+    if is_classification {
+        let mut loss = 0.;
+        for (prediction, expected) in predictions.iter()
+        .zip(expected_values.iter()) {
+            for (predict_value, expected_value) in prediction.iter()
+                .zip(expected.iter()) {
+                loss += fmax(0., -predict_value * expected_value)
+            }
+        }
+
+        return loss;
+    }
+
+    0.
+}
+
+fn calculate_accuracy(model: &mut MultilayerPerceptron,
+                  samples: &Vec<Vec<f64>>,
+                  expected_values: &Vec<Vec<f64>>,
+                  is_classification: bool) -> f64 {
+    let predictions: Vec<Vec<f64>> = samples
+            .iter()
+            .map(|input| {
+                let input_k = input.as_ref();
+
+                predict(model, input_k, is_classification).iter()
+                    .map(|x| if *x >= 0. {1.} else {-1.})
+                    .collect()
+            })
+            .collect::<Vec<Vec<f64>>>();
+
+    if is_classification {
+        let mut accurate_predictions = 0;
+        for (prediction, expected) in predictions.iter()
+        .zip(expected_values.iter()) {
+            if *prediction == *expected {
+                accurate_predictions += 1
+            }
+        }
+        return f64::try_from(accurate_predictions).unwrap() / f64::try_from(predictions.len() as i32).unwrap();
+    }
+
+    0.
 }
 
 #[cfg(test)]
