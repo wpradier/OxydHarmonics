@@ -25,8 +25,8 @@ ml_lib.delete_mlp_model.restype = None
 ml_lib.delete_float_array.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int32]
 ml_lib.delete_float_array.restype = None
 
-ml_lib.save_mlp_model.argtypes = [ctypes.c_void_p,ctypes.POINTER(ctypes.c_char)]
-ml_lib.save_mlp_model.restype = None
+ml_lib.save_mlp_model.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_char)]
+ml_lib.save_mlp_model.restype = ctypes.c_bool
 
 ml_lib.load_mlp_model.argtypes = [ctypes.POINTER(ctypes.c_char)]
 ml_lib.load_mlp_model.restype = ctypes.c_void_p
@@ -72,13 +72,13 @@ def delete_float_array(prediction, npl : List):
 
 
 
-def save_mlp_model(model_ptr: int, filename: str):
-    model = ctypes.c_void_p(model_ptr)
+def save_mlp_model(model_pointer: int, filename: str) -> bool:
     filename_cstr = ctypes.c_char_p(filename.encode("utf-8"))
-    ml_lib.save_mlp_model(model, filename_cstr)
+    return ml_lib.save_mlp_model(model_pointer, filename_cstr)
+
 
 def load_mlp_model(filename: str) -> int:
     filename_cstr = ctypes.c_char_p(filename.encode("utf-8"))
-    model_ptr = ml_lib.load_mlp_model(filename_cstr)
-    return ctypes.cast(model_ptr, ctypes.c_void_p).value
+    model_pointer = ml_lib.load_mlp_model(filename_cstr)
+    return model_pointer
 

@@ -1,5 +1,5 @@
 mod pmc_model;
-use pmc_model::{create_pmc,train_pmc ,predict_pmc, PmcModel};
+use pmc_model::{create_pmc,train_pmc ,predict_pmc, PmcModel, save_pmc, load_pmc};
 use std::slice;
 use std::os::raw::c_char;
 use std::ffi::CStr;
@@ -81,6 +81,7 @@ extern "C" fn predict_mlp_model(model: *mut PmcModel, sample_inputs: *const f64,
         };
         let prediction = predict_pmc(model_ref, inputs, is_classification);
         let fake_output: Vec<f64> = prediction;
+        println!("preditiction {:?}", fake_output);
 
         Box::<[f64]>::into_raw(fake_output.into_boxed_slice()) as *mut f64
 
@@ -104,44 +105,34 @@ extern "C" fn delete_float_array(arr: *mut f32, arr_len: i32) {
 }
 
 
-
 #[no_mangle]
-pub extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) {
+extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
     unsafe {
-        let model_ref = &*model;
         let filename_cstr = CStr::from_ptr(filename);
-        let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
-
-        // Serialize the model to JSON
-        let serialized_model = serde_json::to_string(model_ref).expect("Failed to serialize the model");
-
-        // Save the serialized model to the file
-        let mut file = File::create(filename_str).expect("Failed to create the file");
-        file.write_all(serialized_model.as_bytes()).expect("Failed to write the serialized model to the file");
-
-        println!("MLP model saved to file: {}", filename_str);
+        let filename_str = match filename_cstr.to_str() {
+            Ok(s) => s,
+            Err(_) => return std::ptr::null_mut(),
+        };
+        let model = match load_pmc(filename_str) {
+            Ok(m) => m,
+            Err(_) => return std::ptr::null_mut(),
+        };
+        Box::into_raw(Box::new(model))
     }
 }
 
 #[no_mangle]
-pub extern "C" fn load_mlp_model(filename: *const c_char) -> *mut PmcModel {
+extern "C" fn save_mlp_model(model: *mut PmcModel, filename: *const c_char) -> bool {
     unsafe {
+        let model_ref = model.as_ref().unwrap();
         let filename_cstr = CStr::from_ptr(filename);
-        let filename_str = filename_cstr.to_str().expect("Invalid UTF-8 filename");
-
-        // Load the serialized model from the file
-        let mut file = File::open(filename_str).expect("Failed to open the file");
-        let mut serialized_model = String::new();
-        file.read_to_string(&mut serialized_model).expect("Failed to read the serialized model from the file");
-
-        // Deserialize the model from JSON
-        let deserialized_model: PmcModel = serde_json::from_str(&serialized_model).expect("Failed to deserialize the model");
-
-        // Allocate memory for the model and copy the deserialized model into it
-        let model_ptr = Box::into_raw(Box::new(deserialized_model));
-
-        println!("MLP model loaded from file: {}", filename_str);
-
-        model_ptr
+        let filename_str = match filename_cstr.to_str() {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+        if let Err(_) = save_pmc(model_ref, filename_str) {
+            return false;
+        }
     }
+    true
 }
