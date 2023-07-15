@@ -1,5 +1,6 @@
 use std::alloc::{dealloc, Layout};
 use std::ffi::{c_char, CStr};
+use std::ops::Deref;
 use std::ptr::slice_from_raw_parts;
 use std::result;
 use crate::models::linear::{self, LinearRegressionModel};
@@ -79,7 +80,7 @@ extern "C" fn load_linear_model(filename: *const u8) -> *mut LinearRegressionMod
 #[no_mangle]
 extern "C" fn create_mlp_model(structure: *mut usize, len: usize) -> *mut MultilayerPerceptron {
     unsafe {
-        let mlp_structure = slice_from_raw_parts(structure, usize::try_from(len).unwrap())
+        let mlp_structure = slice_from_raw_parts(structure, len)
             .as_ref().unwrap().to_vec();
 
         let model = Box::new(mlp::create(mlp_structure));
@@ -115,11 +116,13 @@ extern "C" fn train_mlp_model(model: *mut MultilayerPerceptron,
 }
 
 #[no_mangle]
-extern "C" fn predict_mlp_model(model: *mut MultilayerPerceptron, sample_input: *mut f64, columns: usize, is_classification: bool) -> Vec<f64> {
+extern "C" fn predict_mlp_model(model: *mut MultilayerPerceptron, sample_input: *mut f64, columns: usize, is_classification: bool) -> *mut [f64] {
     unsafe {
         let input_vec = slice_from_raw_parts(sample_input, columns).as_ref().unwrap().to_vec();
 
-        mlp::predict(model.as_mut().unwrap(), &input_vec, is_classification)
+        let prediction = mlp::predict(model.as_mut().unwrap(), &input_vec, is_classification);
+
+        Box::<[f64]>::into_raw(prediction.into_boxed_slice())
     }
 }
 
