@@ -10,3 +10,9 @@ crate-type = ["cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
+ndarray = "0.15.6"
+rand = "0.8.5"
+tensorboard-rs = "0.5.9"
+ndarray-rand = "0.14.0"
+csv = "1.2.2"
+ndarray-csv = "0.5.2"
