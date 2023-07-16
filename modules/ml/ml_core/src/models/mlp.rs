@@ -18,6 +18,8 @@ pub fn create(structure: Vec<usize>) -> MultilayerPerceptron {
     let layers = structure.len() - 1;
     let mut weights: Vec<Vec<Vec<f64>>> = Vec::new();
 
+    println!("structure {:?}", structure);
+
     for l in 0..layers + 1 {
         weights.push(Vec::new());
 

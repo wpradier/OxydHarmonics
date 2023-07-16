@@ -2,7 +2,7 @@ import ctypes
 import numpy as np
 from matplotlib import pyplot as plt
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
+ml_lib = ctypes.CDLL("../../../ml_core/target/debug/ml_core.dll")
 
 
 class MultilayerPerceptron:
@@ -61,7 +61,7 @@ def train_mlp_model(
     ml_lib.train_mlp_model.restype = None
 
     return ml_lib.train_mlp_model(
-        model.pointer,
+        ctypes.c_void_p(model.pointer),
         c_x_train,
         len(x_train),
         len(x_train[0]),
@@ -86,7 +86,7 @@ def predict_mlp_model(model: MultilayerPerceptron, sample_input: np.array, is_cl
     c_sample = sample_input.astype(float).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     prediction = ml_lib.predict_mlp_model(
-            model.pointer,
+            ctypes.c_void_p(model.pointer),
             c_sample,
             len(sample_input),
             is_classification
@@ -99,7 +99,7 @@ def destroy_mlp_model(model: MultilayerPerceptron):
     ml_lib.destroy_mlp_model.argtypes = [ctypes.c_void_p]
     ml_lib.destroy_mlp_model.restypes = None
 
-    return ml_lib.destroy_mlp_model(model.pointer)
+    return ml_lib.destroy_mlp_model(ctypes.c_void_p(model.pointer))
 
 
 if __name__ == '__main__':

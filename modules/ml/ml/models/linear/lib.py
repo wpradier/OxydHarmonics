@@ -2,7 +2,7 @@ import ctypes
 from typing import Optional
 import numpy as np
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
+ml_lib = ctypes.CDLL("../../../ml_core/target/debug/ml_core.dll")
 
 
 def create_linear_model(length: int) -> Optional[int]:
