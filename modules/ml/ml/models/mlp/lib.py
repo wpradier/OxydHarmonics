@@ -2,37 +2,21 @@ import ctypes
 import numpy as np
 from matplotlib import pyplot as plt
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/ml_core.dll")
+ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
 
 
 class MultilayerPerceptron:
-    def __init__(self, pointer: int, structure: np.array):
+    def __init__(self, pointer: int):
         self.pointer = pointer
-        self.structure = structure
-
-
-class MLPPrediction:
-    def __init__(self, pointer: int, value: np.array):
-        self.pointer = pointer
-        self.value = value
-
-    def __str__(self):
-        return str(self.value)
-
-    def __del__(self):
-        ml_lib.destroy_mlp_prediction.argtypes = [ctypes.c_void_p]
-        ml_lib.destroy_mlp_prediction.restype = None
-
-        ml_lib.destroy_mlp_prediction(self.pointer)
 
 def create_mlp_model(structure: np.array) -> MultilayerPerceptron:
-    ml_lib.create_mlp_model.argtypes = [ctypes.POINTER(ctypes.c_int32), ctypes.c_int32]
+    ml_lib.create_mlp_model.argtypes = [ctypes.POINTER(ctypes.c_uint), ctypes.c_uint]
     ml_lib.create_mlp_model.restype = ctypes.c_void_p
 
-    c_structure = structure.astype(int).ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
+    c_structure = structure.astype(int).ctypes.data_as(ctypes.POINTER(ctypes.c_uint))
 
-    pointer = ml_lib.create_mlp_model(c_structure, len(structure))
-    return MultilayerPerceptron(pointer, structure)
+    pointer = ml_lib.create_mlp_model(c_structure, ctypes.c_uint(len(structure)))
+    return MultilayerPerceptron(pointer)
 
 
 def train_mlp_model(
@@ -41,7 +25,8 @@ def train_mlp_model(
         y_train: np.array,
         alpha: float,
         epochs: int,
-        is_classification: bool
+        is_classification: bool,
+        train_name: bytes
 ):
     c_x_train = x_train.astype(float).flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
     c_y_train = y_train.astype(float).flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
@@ -56,7 +41,8 @@ def train_mlp_model(
         ctypes.c_int32,
         ctypes.c_double,
         ctypes.c_int32,
-        ctypes.c_bool
+        ctypes.c_bool,
+        ctypes.c_char_p
     ]
     ml_lib.train_mlp_model.restype = None
 
@@ -70,18 +56,19 @@ def train_mlp_model(
         len(y_train[0]),
         alpha,
         epochs,
-        is_classification
+        is_classification,
+        train_name
     )
 
 
-def predict_mlp_model(model: MultilayerPerceptron, sample_input: np.array, is_classification: bool) -> np.array:
+def predict_mlp_model(model: MultilayerPerceptron, sample_input: np.array, is_classification: bool, predict_size: int) -> np.array:
     ml_lib.predict_mlp_model.argtypes = [
         ctypes.c_void_p,
         ctypes.POINTER(ctypes.c_double),
         ctypes.c_int32,
         ctypes.c_bool
     ]
-    ml_lib.predict_mlp_model.restype = ctypes.POINTER(ctypes.c_double * model.structure[-1])
+    ml_lib.predict_mlp_model.restype = ctypes.POINTER(ctypes.c_double * predict_size)
 
     c_sample = sample_input.astype(float).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
@@ -92,7 +79,7 @@ def predict_mlp_model(model: MultilayerPerceptron, sample_input: np.array, is_cl
             is_classification
         )
 
-    return np.ctypeslib.as_array(prediction, (model.structure[-1],)).flatten()[:model.structure[-1]]
+    return np.ctypeslib.as_array(prediction, (predict_size,)).flatten()[:predict_size]
 
 
 def destroy_mlp_model(model: MultilayerPerceptron):
@@ -100,6 +87,28 @@ def destroy_mlp_model(model: MultilayerPerceptron):
     ml_lib.destroy_mlp_model.restypes = None
 
     return ml_lib.destroy_mlp_model(ctypes.c_void_p(model.pointer))
+
+
+def save_mlp_model(model: MultilayerPerceptron, filename: bytes):
+    ml_lib.save_mlp_model.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_char_p
+    ]
+
+    ml_lib.save_mlp_model.restypes = None
+
+    ml_lib.save_mlp_model(ctypes.c_void_p(model.pointer), filename)
+
+
+def load_mlp_model(filename: bytes) -> MultilayerPerceptron:
+    ml_lib.load_mlp_model.argtypes = [
+        ctypes.c_char_p
+    ]
+
+    ml_lib.load_mlp_model.restypes = None
+    pointer = ml_lib.load_mlp_model(filename)
+
+    return MultilayerPerceptron(pointer)
 
 
 if __name__ == '__main__':

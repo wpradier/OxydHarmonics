@@ -1,5 +1,5 @@
 use std::alloc::{dealloc, Layout};
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char, c_int, c_uint, CStr};
 use std::ops::Deref;
 use std::ptr::slice_from_raw_parts;
 use std::result;
@@ -78,12 +78,11 @@ extern "C" fn load_linear_model(filename: *const u8) -> *mut LinearRegressionMod
 /*** MLP / MULTILAYER PERCEPTRON ***/
 
 #[no_mangle]
-extern "C" fn create_mlp_model(structure: *mut i32, len: i32) -> *mut MultilayerPerceptron {
-    println!("sexual favors");
+extern "C" fn create_mlp_model(structure: *mut usize, len: usize) -> *mut MultilayerPerceptron {
     unsafe {
-        let mlp_structure = slice_from_raw_parts(structure, len as usize).as_ref().unwrap().iter()
-            .map(|x| usize::try_from(x.clone()).unwrap())
-            .collect();
+        let mlp_structure = slice_from_raw_parts(structure, usize::try_from(len).unwrap())
+            .as_ref().unwrap().to_vec();
+
 
         let model = Box::new(mlp::create(mlp_structure));
 
@@ -94,9 +93,10 @@ extern "C" fn create_mlp_model(structure: *mut i32, len: i32) -> *mut Multilayer
 
 #[no_mangle]
 extern "C" fn train_mlp_model(model: *mut MultilayerPerceptron,
-                                 x_train: *mut f64, lines: i32, columns: i32,
-                                 y_train: *mut f64, y_lines: i32, y_columns: i32,
-                                    alpha: f64, epochs: u32, is_classification: bool) {
+                              x_train: *mut f64, lines: i32, columns: i32,
+                              y_train: *mut f64, y_lines: i32, y_columns: i32,
+                              alpha: f64, epochs: u32, is_classification: bool,
+                              train_name_c: *const c_char) {
     unsafe {
         let u_lines = usize::try_from(lines).unwrap();
         let u_columns = usize::try_from(columns).unwrap();
@@ -118,7 +118,9 @@ extern "C" fn train_mlp_model(model: *mut MultilayerPerceptron,
         //println!("INPUT VEC: {:?}", input_dataset);
         //println!("OUTPUT VEC: {:?}", output_dataset);
 
-        mlp::train(model.as_mut().unwrap(), &input_dataset, &output_dataset, alpha, epochs, is_classification);
+        let train_name = CStr::from_ptr(train_name_c).to_str().unwrap();
+
+        mlp::train(model.as_mut().unwrap(), &input_dataset, &output_dataset, alpha, epochs, is_classification, train_name);
     }
 }
 
@@ -134,14 +136,6 @@ extern "C" fn predict_mlp_model(model: *mut MultilayerPerceptron, sample_input: 
 }
 
 #[no_mangle]
-extern "C" fn save_mlp_model(model: *mut MultilayerPerceptron, filename: *const c_char) {
-    unsafe {
-        let c_str = CStr::from_ptr(filename).to_str().unwrap();
-        //TODO SAVE
-    }
-}
-
-#[no_mangle]
 extern "C" fn destroy_mlp_model(model: *mut MultilayerPerceptron) {
     unsafe {
         dealloc(model as *mut u8, Layout::new::<MultilayerPerceptron>());
@@ -149,8 +143,22 @@ extern "C" fn destroy_mlp_model(model: *mut MultilayerPerceptron) {
 }
 
 #[no_mangle]
-extern "C" fn load_mlp_model(filename: *const u8) -> *mut MultilayerPerceptron {
-    let model = Box::new(mlp::create(vec![2, 1]));
+extern "C" fn save_mlp_model(model: *mut MultilayerPerceptron, filename: *const c_char) {
+    unsafe {
+        let c_str = CStr::from_ptr(filename).to_str().unwrap();
 
-    Box::leak(model)
+        mlp::save(model.as_ref().unwrap(), c_str).unwrap()
+    }
+}
+
+#[no_mangle]
+extern "C" fn load_mlp_model(filename: *const c_char) -> *mut MultilayerPerceptron {
+    unsafe {
+        let c_str = CStr::from_ptr(filename).to_str().unwrap();
+        let model = mlp::load(c_str).unwrap();
+        let boxed_model = Box::new(model);
+
+        Box::leak(boxed_model)
+    }
+
 }
