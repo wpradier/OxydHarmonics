@@ -45,9 +45,9 @@ extern "C" fn train_linear_model(model: *mut LinearRegressionModel,
 }
 
 #[no_mangle]
-extern "C" fn predict_linear_model(model: *mut LinearRegressionModel, sample_input: *mut f64, columns: usize, is_classification: bool) -> f64 {
+extern "C" fn predict_linear_model(model: *mut LinearRegressionModel, sample_input: *mut f64, columns: i32, is_classification: bool) -> f64 {
     unsafe {
-        let input_vec = slice_from_raw_parts(sample_input, columns).as_ref().unwrap().to_vec();
+        let input_vec = slice_from_raw_parts(sample_input, usize::try_from(columns).unwrap()).as_ref().unwrap().to_vec();
 
         linear::predict(model.as_ref().unwrap(), &input_vec, is_classification)
     }
@@ -78,10 +78,12 @@ extern "C" fn load_linear_model(filename: *const u8) -> *mut LinearRegressionMod
 /*** MLP / MULTILAYER PERCEPTRON ***/
 
 #[no_mangle]
-extern "C" fn create_mlp_model(structure: *mut usize, len: usize) -> *mut MultilayerPerceptron {
+extern "C" fn create_mlp_model(structure: *mut i32, len: i32) -> *mut MultilayerPerceptron {
+    println!("sexual favors");
     unsafe {
-        let mlp_structure = slice_from_raw_parts(structure, len)
-            .as_ref().unwrap().to_vec();
+        let mlp_structure = slice_from_raw_parts(structure, len as usize).as_ref().unwrap().iter()
+            .map(|x| usize::try_from(x.clone()).unwrap())
+            .collect();
 
         let model = Box::new(mlp::create(mlp_structure));
 
@@ -92,19 +94,24 @@ extern "C" fn create_mlp_model(structure: *mut usize, len: usize) -> *mut Multil
 
 #[no_mangle]
 extern "C" fn train_mlp_model(model: *mut MultilayerPerceptron,
-                                 x_train: *mut f64, lines: usize, columns: usize,
-                                 y_train: *mut f64, y_lines: usize, y_columns: usize,
+                                 x_train: *mut f64, lines: i32, columns: i32,
+                                 y_train: *mut f64, y_lines: i32, y_columns: i32,
                                     alpha: f64, epochs: u32, is_classification: bool) {
     unsafe {
-        let input_dataset = slice_from_raw_parts(x_train, lines * columns)
+        let u_lines = usize::try_from(lines).unwrap();
+        let u_columns = usize::try_from(columns).unwrap();
+        let u_y_lines = usize::try_from(y_lines).unwrap();
+        let u_y_columns = usize::try_from(y_columns).unwrap();
+
+        let input_dataset = slice_from_raw_parts(x_train, u_lines * u_columns)
             .as_ref().unwrap()
-            .chunks(columns)
+            .chunks(u_columns)
             .map(|x| x.to_vec())
             .collect::<Vec<_>>();
 
-        let output_dataset = slice_from_raw_parts(y_train, y_lines * y_columns)
+        let output_dataset = slice_from_raw_parts(y_train, u_y_lines * u_y_columns)
             .as_ref().unwrap()
-            .chunks(y_columns)
+            .chunks(u_y_columns)
             .map(|x| x.to_vec())
             .collect::<Vec<_>>();
 
@@ -116,9 +123,9 @@ extern "C" fn train_mlp_model(model: *mut MultilayerPerceptron,
 }
 
 #[no_mangle]
-extern "C" fn predict_mlp_model(model: *mut MultilayerPerceptron, sample_input: *mut f64, columns: usize, is_classification: bool) -> *mut [f64] {
+extern "C" fn predict_mlp_model(model: *mut MultilayerPerceptron, sample_input: *mut f64, columns: i32, is_classification: bool) -> *mut [f64] {
     unsafe {
-        let input_vec = slice_from_raw_parts(sample_input, columns).as_ref().unwrap().to_vec();
+        let input_vec = slice_from_raw_parts(sample_input, usize::try_from(columns).unwrap()).as_ref().unwrap().to_vec();
 
         let prediction = mlp::predict(model.as_mut().unwrap(), &input_vec, is_classification);
 
