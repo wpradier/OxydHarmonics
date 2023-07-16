@@ -1,11 +1,17 @@
 import ctypes
 from typing import Optional, List
 import numpy as np
+import platform
 
-# lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")  # Replace with the actual library filename
+if platform.system() == 'Linux':
+    ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")  # Replace with the actual library filename
+elif platform.system() == "Windows":
+    ml_lib = ctypes.CDLL("../../../ml_core/target/debug/ml_core.dll")
+#elif (platform.system() == "Darwin"):
+
+
 # lib = ctypes.CDLL("your_rust_library.so")  # Replace with the actual library filename
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/ml_core.dll")
 
 
 def create_linear_model(length: int) -> int:
