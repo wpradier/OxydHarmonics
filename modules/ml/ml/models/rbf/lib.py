@@ -5,7 +5,7 @@ import numpy as np
 # lib = ctypes.CDLL("your_rust_library.dll")  # Replace with the actual library filename
 # lib = ctypes.CDLL("your_rust_library.so")  # Replace with the actual library filename
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.dylib") # setup Etienne
+ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so") # setup Etienne
 
 
 ml_lib.create_rbf_model.argtypes  = [ctypes.c_int, ctypes.c_bool]
@@ -75,8 +75,8 @@ def predict_rbf_model(model_pointer:int, sample_input:List[float],sample_inputs_
             ctypes.POINTER(ctypes.c_double)),sample_inputs_size, is_classification)
     return np.ctypeslib.as_array(prediction, (1,))
 
-def delete_rbf_model(model_pointer:int):
-    ml_lib.delete_rbf_model(model_pointer)
+def destroy_rbf_model(model_pointer:int):
+    ml_lib.destroy_rbf_model(model_pointer)
 
 
 

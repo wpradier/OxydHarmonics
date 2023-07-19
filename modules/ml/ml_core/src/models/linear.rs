@@ -8,11 +8,11 @@ use ndarray_csv::{Array2Reader, Array2Writer};
 use ndarray_rand::rand_distr::num_traits::abs;
 
 #[allow(non_snake_case)]
-pub struct LinearModelArys {
+pub struct LinearModel {
     pub W : Array1<f64>
 }
 
-impl LinearModelArys {
+impl LinearModel {
     pub fn _get_trained_variable(&self) -> &Array1<f64> {
         &self.W
     }
@@ -122,12 +122,12 @@ impl LinearModelArys {
         }
         Ok(())
     }
-    pub fn load(file_path: String) -> Result<Box<LinearModelArys>, Box<dyn Error> >{
+    pub fn load(file_path: String) -> Result<Box<LinearModel>, Box<dyn Error> >{
         let file = File::open(file_path)?;
         let mut reader = ReaderBuilder::new().has_headers(false).from_reader(file);
         let array_read: Array2<f64> = reader.deserialize_array2_dynamic()?;
         let array1_from_read: Array1<f64> = array_read.slice(s![0, ..]).into_owned();
-        let model = Box::new(LinearModelArys{ W: array1_from_read});
+        let model = Box::new(LinearModel { W: array1_from_read});
 
         Ok(model)
     }
@@ -155,7 +155,7 @@ mod tests {
     ];
 
 
-        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+        let mut model = LinearModel { W: array![0.1, 0.1, 0.1]};
 
         model._fit(x.clone(), y.clone(), 50000, 0.01, true);
         let res1 = model.predict(array![1., 8.], true);
@@ -180,7 +180,7 @@ mod tests {
         let path = String::from("./testsave");
 
 
-        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+        let mut model = LinearModel { W: array![0.1, 0.1, 0.1]};
 
         model._fit(x.clone(), y.clone(), 50000, 0.01, true);
 
@@ -204,13 +204,13 @@ mod tests {
         let path = String::from(path_origin);
          let path2 = String::from(path_origin);
 
-        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+        let mut model = LinearModel { W: array![0.1, 0.1, 0.1]};
 
         model._fit(x.clone(), y.clone(), 50000, 0.01, true);
 
         model.save(path);
 
-         let new_model = LinearModelArys::load(path2).unwrap();
+         let new_model = LinearModel::load(path2).unwrap();
 
          println!("{:?}", new_model.W);
     }
@@ -232,7 +232,7 @@ mod tests {
 
 
 
-        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1, 0.1, 0.1, 0.1]};
+        let mut model = LinearModel { W: array![0.1, 0.1, 0.1, 0.1, 0.1, 0.1]};
 
         model._fit(x.clone(), y.clone(), 50000, 0.01, true);
         let res1 = model.predict(array![1., 0., 1., 0., 0.], true);
@@ -265,7 +265,7 @@ mod tests {
 
 
 
-        let mut model = LinearModelArys { W: array![0.1, 0.1, 0.1]};
+        let mut model = LinearModel { W: array![0.1, 0.1, 0.1]};
 
         model._fit(x.clone(), y.clone(), 50000, 0.01, false);
         let res1 = model.predict(array![1., 1.], false);

@@ -1,1 +1,2 @@
-pub mod linear_arys;
+pub mod linear;
+pub mod rbf;

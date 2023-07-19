@@ -168,7 +168,7 @@ pub struct RBFNet {
     pub b: f64,
 }
 
-pub fn create_model(layers: &[usize]) -> RBFNet {
+pub fn create(layers: &[usize]) -> RBFNet {
     let k = layers.len() - 1;
     let centers = Vec::new();
     let stds = Vec::new();
@@ -192,7 +192,7 @@ pub fn generate_random_weights(k: usize) -> Vec<f64> {
         .collect::<Vec<f64>>()
 }
 
-pub fn train_rbf(model: &mut RBFNet, X: &[Vec<f64>], y: &[f64], lr: f64, epochs: usize) {
+pub fn train(model: &mut RBFNet, X: &[Vec<f64>], y: &[f64], lr: f64, epochs: usize) {
     let n = X.len();
     let d = X[0].len();
     let (centers, stds) = if model.infer_stds {
@@ -260,7 +260,7 @@ pub fn tanh(x: f64) -> f64 {
     (E.powf(2.0 * x) - 1.0) / (E.powf(2.0 * x) + 1.0)
 }
 
-pub fn predict_rbf(model: &mut RBFNet, X: &[Vec<f64>], is_classification: bool) -> Vec<f64> {
+pub fn predict(model: &mut RBFNet, X: &[Vec<f64>], is_classification: bool) -> Vec<f64> {
     let mut y_pred = Vec::new();
     for x in X {
         let mut a = vec![0.0; model.k as usize];
@@ -279,25 +279,4 @@ pub fn predict_rbf(model: &mut RBFNet, X: &[Vec<f64>], is_classification: bool) 
         }
     }
     y_pred
-}
-
-fn main() {
-    let X_class = vec![vec![1.0, 1.0], vec![2.0, 3.0], vec![3.0, 3.0]];
-    let Y_class = vec![1.0, -1.0, -1.0];
-
-    let X_reg = vec![vec![1.0], vec![2.0], vec![3.0], vec![4.0]];
-    let Y_reg = vec![2.0, 3.0, 4.0, 5.0];
-
-    let layers = vec![2, 3, 1]; // Nombre de neurones
-    let lr = 0.001; // Taux d'apprentissage
-    let epochs = 500000; // Nombre d'itérations d'apprentissage
-
-    let mut net = create_model(&layers);
-
-    train_rbf(&mut net, &X_reg, &Y_reg, lr, epochs);
-
-    for pred in &X_reg {
-        let pred = predict_rbf(&mut net, &[pred.clone()], false)[0];
-        println!("Prédiction : {:.2}", pred);
-    }
 }
