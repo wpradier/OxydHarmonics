@@ -11,8 +11,12 @@ path = "src/lib.rs"
 
 [dependencies]
 ndarray = "0.15.6"
+libm = "0.2.7"
 rand = "0.8.5"
 tensorboard-rs = "0.5.9"
+chrono = "0.4.26"
+bincode = "1.3.3"
+serde = "1.0.171"
 ndarray-rand = "0.14.0"
 csv = "1.2.2"
 ndarray-csv = "0.5.2"
