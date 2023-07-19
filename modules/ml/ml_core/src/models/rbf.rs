@@ -1,12 +1,11 @@
-use rand::prelude::{SliceRandom, ThreadRng};
+use rand::prelude::{SliceRandom};
 use rand::thread_rng;
 use rand::Rng;
-use std::f64::consts::PI;
 use core::f64::consts::E;
 
-fn kmeans(X: &[Vec<f64>], k: usize) -> (Vec<Vec<f64>>, Vec<f64>) {
-    let n = X.len();
-    let d = X[0].len();
+fn kmeans(x_input: &[Vec<f64>], k: usize) -> (Vec<Vec<f64>>, Vec<f64>) {
+    let n = x_input.len();
+    let d = x_input[0].len();
     let mut centers = vec![vec![0.0; d]; k];
     let mut stds = vec![0.0; k];
 
@@ -15,7 +14,7 @@ fn kmeans(X: &[Vec<f64>], k: usize) -> (Vec<Vec<f64>>, Vec<f64>) {
     let mut indices: Vec<usize> = (0..n).collect();
     indices.shuffle(&mut rng);
     for i in 0..k {
-        centers[i] = X[indices[i]].clone();
+        centers[i] = x_input[indices[i]].clone();
     }
 
     // Boucle principale du k-means
@@ -24,8 +23,8 @@ fn kmeans(X: &[Vec<f64>], k: usize) -> (Vec<Vec<f64>>, Vec<f64>) {
         prev_centers.clone_from_slice(&centers);
         let mut counts = vec![0; k];
         let mut sums = vec![vec![0.0; d]; k];
-        for x in X {
-            let (min_index, min_dist) = (0..k)
+        for x in x_input {
+            let (min_index, _min_dist) = (0..k)
                 .map(|i| {
                     let dist = (0..d)
                         .map(|j| (x[j] - centers[i][j]).powi(2))
@@ -52,7 +51,7 @@ fn kmeans(X: &[Vec<f64>], k: usize) -> (Vec<Vec<f64>>, Vec<f64>) {
     // Calcul des écarts types
     let mut std_sum = 0.0;
     let mut count = 0;
-    for x in X {
+    for x in x_input {
         let min_dist = (0..k)
             .map(|i| {
                 (0..d)
@@ -192,11 +191,11 @@ pub fn generate_random_weights(k: usize) -> Vec<f64> {
         .collect::<Vec<f64>>()
 }
 
-pub fn train(model: &mut RBFNet, X: &[Vec<f64>], y: &[f64], lr: f64, epochs: usize) {
-    let n = X.len();
-    let d = X[0].len();
+pub fn train(model: &mut RBFNet, x: &[Vec<f64>], y: &[f64], lr: f64, epochs: usize) {
+    let n = x.len();
+    let d = x[0].len();
     let (centers, stds) = if model.infer_stds {
-        kmeans(X, model.k as usize)
+        kmeans(x, model.k as usize)
     } else {
         (model.centers.clone(), model.stds.clone())
     };
@@ -216,7 +215,7 @@ pub fn train(model: &mut RBFNet, X: &[Vec<f64>], y: &[f64], lr: f64, epochs: usi
     for i in 0..n {
         for j in 0..model.k {
             let dist = (0..d)
-                .map(|k| (X[i][k] - model.centers[j as usize][k]).powi(2))
+                .map(|k| (x[i][k] - model.centers[j as usize][k]).powi(2))
                 .sum::<f64>()
                 .sqrt();
             phi[i][j as usize] = rbf(dist, 0.0, model.stds[j as usize]);
@@ -240,7 +239,7 @@ pub fn train(model: &mut RBFNet, X: &[Vec<f64>], y: &[f64], lr: f64, epochs: usi
             let mut a = vec![0.0; model.k as usize];
             for (j, c) in model.centers.iter().enumerate() {
                 let dist = (0..d)
-                    .map(|k| (X[i][k] - c[k]).powi(2))
+                    .map(|k| (x[i][k] - c[k]).powi(2))
                     .sum::<f64>()
                     .sqrt();
                 a[j] = rbf(dist, 0.0, model.stds[j]);
@@ -260,9 +259,9 @@ pub fn tanh(x: f64) -> f64 {
     (E.powf(2.0 * x) - 1.0) / (E.powf(2.0 * x) + 1.0)
 }
 
-pub fn predict(model: &mut RBFNet, X: &[Vec<f64>], is_classification: bool) -> Vec<f64> {
+pub fn predict(model: &mut RBFNet, x_input: &[Vec<f64>], is_classification: bool) -> Vec<f64> {
     let mut y_pred = Vec::new();
-    for x in X {
+    for x in x_input {
         let mut a = vec![0.0; model.k as usize];
         for (j, c) in model.centers.iter().enumerate() {
             let dist = (0..x.len())

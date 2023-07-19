@@ -1,9 +1,7 @@
 use std::error::Error;
-use std::fs::{File, read};
-use std::io;
-use std::path::Path;
+use std::fs::{File};
 use csv::{ReaderBuilder, WriterBuilder};
-use ndarray::{array, Array1, Array2, concatenate, Axis, Ix2, s, Array, ArrayBase, OwnedRepr};
+use ndarray::{array, Array1, Array2, concatenate, Axis, Ix2, s, Array};
 use ndarray_csv::{Array2Reader, Array2Writer};
 use ndarray_rand::rand_distr::num_traits::abs;
 
@@ -88,25 +86,25 @@ impl LinearModel {
         }
     }
 
-    pub fn test(&self, X_test : Array2<f64>, Y_test : Array2<f64>, pas : f64, is_classification : bool)
+    pub fn test(&self, input_test: Array2<f64>, output_test: Array2<f64>, pas : f64, is_classification : bool)
                 -> f64{
-        //println!("{}", X_test);
-        let m  = X_test.nrows(); // number of training example
-        let y_flattened: Array2<f64> = Y_test.clone().into_shape((1, X_test.nrows())).unwrap();
-        let Y_test= y_flattened.slice(s![0, ..]).into_owned();
+        //println!("{}", x_test);
+        let m  = input_test.nrows(); // number of training example
+        let y_flattened: Array2<f64> = output_test.clone().into_shape((1, input_test.nrows())).unwrap();
+        let y_test = y_flattened.slice(s![0, ..]).into_owned();
 
         let mut res = 0.;
         for i in 0..m {
-            let X_i = X_test.slice(s![i, ..]);
+            let x_i = input_test.slice(s![i, ..]);
 
             //getting the training example output
-            let Y_i = &Y_test[i];
-            let y_pred = self.predict(X_i.into_owned(), is_classification);
+            let y_i = &y_test[i];
+            let y_pred = self.predict(x_i.into_owned(), is_classification);
 
-            //println!(" to predict {} * {} ?", X_i, self.W);
-            println!("{} - {} < {} ?", Y_i, y_pred, pas);
+            //println!(" to predict {} * {} ?", x_i, self.W);
+            println!("{} - {} < {} ?", y_i, y_pred, pas);
 
-            if abs(Y_i - y_pred) < pas {
+            if abs(y_i - y_pred) < pas {
                 res += 1.;
             }
         }

@@ -1,9 +1,7 @@
-use std::cmp::max;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 use chrono::{DateTime, Local};
-use libm::fmax;
 use rand::Rng;
 use tensorboard_rs::summary_writer::SummaryWriter;
 use crate::utils::vec::initialise_weight;
@@ -120,7 +118,7 @@ pub fn create(structure: Vec<usize>) -> MultilayerPerceptron {
 
     for l in 0..layers + 1 {
         gradients.push(Vec::new());
-        for j in 0..structure[l] + 1 {
+        for _ in 0..structure[l] + 1 {
             gradients[l].push(0.);
         }
     }
@@ -185,13 +183,13 @@ pub fn train(
         for _ in 0..x_train.len() {
             let k = rng.gen_range(0..x_train.len());
 
-            let Xk = x_train.get(k).unwrap();
-            let Yk = y_train.get(k).unwrap();
+            let xk = x_train.get(k).unwrap();
+            let yk = y_train.get(k).unwrap();
 
-            propagate(model, Xk, is_classification);
+            propagate(model, xk, is_classification);
 
             for j in 1..model.structure[model.layers] + 1 {
-                model.gradients[model.layers][j] = model.neurons_outputs[model.layers][j] - Yk[j - 1];
+                model.gradients[model.layers][j] = model.neurons_outputs[model.layers][j] - yk[j - 1];
 
                 if is_classification {
                     model.gradients[model.layers][j] *= 1. - (model.neurons_outputs[model.layers][j].powi(2))

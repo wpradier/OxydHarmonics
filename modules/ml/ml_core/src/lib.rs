@@ -1,10 +1,8 @@
 use std::alloc::{dealloc, Layout};
-use std::ffi::{c_char, c_int, c_uint, CStr};
+use std::ffi::{c_char, CStr};
 use std::slice;
-use std::ops::Deref;
 use std::ptr::slice_from_raw_parts;
-use std::result;
-use ndarray::{array, Array1, Array2};
+use ndarray::{Array1, Array2};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use crate::models::linear::LinearModel;
@@ -122,7 +120,7 @@ extern "C" fn load_linear_model(_filename: *const c_char) -> *mut LinearModel {
 }
 
 #[no_mangle]
-extern "C" fn destroy_linear_model(_model: *mut LinearModel) {
+extern "C" fn destroy_linear_model(model: *mut LinearModel) {
     unsafe {
         dealloc(model as *mut u8, Layout::new::<LinearModel>());
     }
@@ -219,7 +217,7 @@ extern "C" fn load_mlp_model(filename: *const c_char) -> *mut MultilayerPerceptr
 /** RBF **/
 
 #[no_mangle]
-pub extern "C" fn create_rbf_model(arch: *const usize, arch_len: i32, infer_stds: bool) -> *mut RBFNet {
+pub extern "C" fn create_rbf_model(arch: *const usize, arch_len: i32, _infer_stds: bool) -> *mut RBFNet {
     // Convert the `arch` pointer to a slice
     let arch_slice = unsafe { std::slice::from_raw_parts(arch, arch_len as usize) };
 
@@ -282,7 +280,7 @@ pub extern "C" fn predict_rbf_model(
 pub extern "C" fn destroy_rbf_model(model: *mut RBFNet) {
     if !model.is_null() {
         unsafe {
-            Box::from_raw(model);
+            dealloc(model as *mut u8, Layout::new::<RBFNet>());
         }
     }
 }
