@@ -398,7 +398,8 @@ mod tests {
             &sample_output,
             0.01,
             25000,
-            true
+            true,
+            "test"
         );
 
         println!("AFTER TRAIN");
