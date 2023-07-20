@@ -1,6 +1,6 @@
 # Oxyd Harmonics
 
-Launch app:
+Launch app (MLP only works on linux):
 
 ```bash
 cd modules/ml/ml/models/mlp
