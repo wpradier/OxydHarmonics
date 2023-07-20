@@ -316,8 +316,15 @@ fn classif_accuracy(
     expected_values: &Vec<Vec<f64>>,
     predictions: &Vec<Vec<f64>>
 ) -> f64 {
+
+    let full_predictions = predictions.iter()
+        .map(|x| x.iter()
+                    .map(|x| if *x >= 0. {1.} else {-1.})
+                    .collect()
+        ).collect::<Vec<Vec<f64>>>();
+
     let mut accurate_predictions = 0;
-    for (prediction, expected) in predictions.iter()
+    for (prediction, expected) in full_predictions.iter()
     .zip(expected_values.iter()) {
         if *prediction == *expected {
             accurate_predictions += 1

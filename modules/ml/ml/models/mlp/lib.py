@@ -2,7 +2,7 @@ import ctypes
 import numpy as np
 from matplotlib import pyplot as plt
 
-ml_lib = ctypes.CDLL("../../../ml_core/target/debug/libml_core.so")
+ml_lib = ctypes.CDLL("../../../ml_core/target/release/libml_core.so")
 
 
 class MultilayerPerceptron:
